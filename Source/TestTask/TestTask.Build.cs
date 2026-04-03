@@ -28,6 +28,7 @@ public class TestTask : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"TestTask",
+			"TestTask/TestTaskSolution",
 			"TestTask/Variant_Horror",
 			"TestTask/Variant_Horror/UI",
 			"TestTask/Variant_Shooter",
