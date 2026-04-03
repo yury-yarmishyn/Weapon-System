@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InputActionValue.h"
 #include "TtCharacter.h"
+#include "TestTaskSolution/Weapons/Interfaces/TtWeaponInterface.h"
 #include "TtPlayer.generated.h"
 
 class UCameraComponent;
@@ -12,7 +12,7 @@ class USkeletalMeshComponent;
 class UTtWeaponComponent;
 
 UCLASS()
-class TESTTASK_API ATtPlayer : public ATtCharacter
+class TESTTASK_API ATtPlayer : public ATtCharacter, public ITtWeaponInterface
 {
 	GENERATED_BODY()
 
@@ -22,10 +22,10 @@ public:
 	virtual UTtWeaponComponent* GetWeaponComponent() const override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
-	void Move(const FInputActionValue& Value);
+	void Move(const FVector2D& MoveInput);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
-	void Look(const FInputActionValue& Value);
+	void Look(const FVector2D& LookInput);
 
 protected:
 	virtual void BeginPlay() override;

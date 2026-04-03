@@ -1,18 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TestTaskSolution/PlayerState/TtPlayerState.h"
-#include "TestTaskSolution/Combat/Attributes/TtAttributeSet.h"
-#include "TestTaskSolution/Combat/Effects/TtInitializeAttributes.h"
-#include "TestTaskSolution/Core/TtAbilitySystemComponent.h"
+#include "TestTaskSolution/Combat/AbilityComponent/TtAbilitySystemComponent.h"
 
 ATtPlayerState::ATtPlayerState()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UTtAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-
-	AttributeSetClass = UTtAttributeSet::StaticClass();
-	InitialAttributesEffectClass = UTtInitializeAttributes::StaticClass();
 
 	SetNetUpdateFrequency(100.f);
 }
@@ -29,7 +24,7 @@ UTtAbilitySystemComponent* ATtPlayerState::GetTtAbilitySystemComponent() const
 
 const UTtAttributeSet* ATtPlayerState::GetAttributeSet() const
 {
-	return AttributeSet;
+	return AbilitySystemComponent ? AbilitySystemComponent->GetAttributeSet() : nullptr;
 }
 
 void ATtPlayerState::BeginPlay()
@@ -52,14 +47,10 @@ void ATtPlayerState::BeginPlay()
 		AbilitySystemComponent->InitializeAbilitySystemComponent(this, AvatarActor);
 	}
 
-	AttributeSet = AbilitySystemComponent->GetSet<UTtAttributeSet>();
-
-	if (!HasAuthority() || bAttributesInitialized)
+	if (!HasAuthority())
 	{
 		return;
 	}
 
-	AbilitySystemComponent->InitializeAttributeSet(AttributeSetClass, InitialAttributesEffectClass);
-	AttributeSet = AbilitySystemComponent->GetSet<UTtAttributeSet>();
-	bAttributesInitialized = true;
+	AbilitySystemComponent->InitializeAttributeSet();
 }

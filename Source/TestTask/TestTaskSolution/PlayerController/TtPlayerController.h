@@ -3,22 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TestTaskPlayerController.h"
 #include "TtPlayerController.generated.h"
 
 class UInputMappingContext;
+class APawn;
 
-/**
- * TestTaskSolution player controller.
- * Input mapping contexts are initialized explicitly from Blueprint.
- */
 UCLASS(config="Game")
-class TESTTASK_API ATtPlayerController : public ATestTaskPlayerController
+class TESTTASK_API ATtPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-public:
-	UFUNCTION(BlueprintCallable, Category="Input")
-	void InitializeInputMappingContext(UInputMappingContext* MappingContext, int32 Priority = 0);
+protected:
+	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
+	TArray<UInputMappingContext*> DefaultMappingContexts;
+	
+protected:
+	virtual void SetupInputComponent() override;
 };
-

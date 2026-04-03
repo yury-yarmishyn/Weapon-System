@@ -8,22 +8,27 @@
 
 class UAttributeSet;
 class UGameplayEffect;
+class UTtAttributeSet;
 
-/**
- * Project-specific ASC wrapper.
- * Kept as an extension point for startup behavior and logging.
- */
 UCLASS()
 class TESTTASK_API UTtAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 
 public:
+	UTtAbilitySystemComponent();
 	
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
+	TSubclassOf<UAttributeSet> AttributeSetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UGameplayEffect> InitializeAttributesEffectClass;
+
+	UPROPERTY()
+	const UTtAttributeSet* AttributeSet = nullptr;
 	
 public:
 	void InitializeAbilitySystemComponent(AActor* InOwnerActor, AActor* InAvatarActor);
-	void InitializeAttributeSet(TSubclassOf<UAttributeSet> InAttributeSetClass, TSubclassOf<UGameplayEffect> InitialEffect);
+	void InitializeAttributeSet();
+	const UTtAttributeSet* GetAttributeSet() const;
 };

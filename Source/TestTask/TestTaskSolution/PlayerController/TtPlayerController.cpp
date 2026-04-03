@@ -3,34 +3,22 @@
 #include "TestTaskSolution/PlayerController/TtPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/Pawn.h"
 #include "InputMappingContext.h"
 #include "TestTask.h"
 
-void ATtPlayerController::InitializeInputMappingContext(UInputMappingContext* MappingContext, int32 Priority)
+void ATtPlayerController::SetupInputComponent()
 {
-	if (!IsLocalPlayerController())
-	{
-		return;
-	}
+	Super::SetupInputComponent();
 
-	if (!MappingContext)
+	if (IsLocalPlayerController())
 	{
-		UE_LOG(LogTestTask, Warning, TEXT("ATtPlayerController: MappingContext is null for %s"), *GetNameSafe(this));
-		return;
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		{
+			for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
+			{
+				Subsystem->AddMappingContext(CurrentContext, 0);
+			}
+		}
 	}
-
-	ULocalPlayer* LocalPlayer = GetLocalPlayer();
-	if (!LocalPlayer)
-	{
-		UE_LOG(LogTestTask, Warning, TEXT("ATtPlayerController: LocalPlayer is null for %s"), *GetNameSafe(this));
-		return;
-	}
-
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
-	{
-		Subsystem->AddMappingContext(MappingContext, Priority);
-		return;
-	}
-
-	UE_LOG(LogTestTask, Warning, TEXT("ATtPlayerController: EnhancedInput subsystem not found for %s"), *GetNameSafe(this));
 }

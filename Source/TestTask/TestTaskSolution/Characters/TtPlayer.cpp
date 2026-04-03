@@ -3,9 +3,8 @@
 #include "TestTaskSolution/Characters/TtPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "InputActionValue.h"
 #include "TestTask.h"
-#include "TestTaskSolution/Core/TtAbilitySystemComponent.h"
+#include "TestTaskSolution/Combat/AbilityComponent/TtAbilitySystemComponent.h"
 #include "TestTaskSolution/PlayerState/TtPlayerState.h"
 #include "TestTaskSolution/Weapons/Components/TtWeaponComponent.h"
 
@@ -73,28 +72,24 @@ void ATtPlayer::InitializeAbilitySystemFromPlayerState()
 	TtAbilitySystemComponent->InitializeAbilitySystemComponent(TtPlayerState, this);
 }
 
-void ATtPlayer::Move(const FInputActionValue& Value)
+void ATtPlayer::Move(const FVector2D& MoveInput)
 {
-	const FVector2D MovementVector = Value.Get<FVector2D>();
-
 	if (!Controller)
 	{
 		return;
 	}
 
-	AddMovementInput(GetActorRightVector(), MovementVector.X);
-	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	AddMovementInput(GetActorRightVector(), MoveInput.X);
+	AddMovementInput(GetActorForwardVector(), MoveInput.Y);
 }
 
-void ATtPlayer::Look(const FInputActionValue& Value)
+void ATtPlayer::Look(const FVector2D& LookInput)
 {
-	const FVector2D LookAxisVector = Value.Get<FVector2D>();
-
 	if (!Controller)
 	{
 		return;
 	}
 
-	AddControllerYawInput(LookAxisVector.X);
-	AddControllerPitchInput(LookAxisVector.Y);
+	AddControllerYawInput(LookInput.X);
+	AddControllerPitchInput(-LookInput.Y);
 }

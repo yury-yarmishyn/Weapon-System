@@ -8,14 +8,12 @@
 #include "TtPlayerState.generated.h"
 
 class UAbilitySystemComponent;
-class UGameplayEffect;
-class UAttributeSet;
 class UTtAbilitySystemComponent;
 class UTtAttributeSet;
 
 /**
  * Persistent gameplay state holder.
- * Owns ASC and AttributeSet.
+ * Owns ASC.
  */
 UCLASS()
 class TESTTASK_API ATtPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -34,16 +32,4 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UTtAbilitySystemComponent> AbilitySystemComponent;
-
-	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	const UTtAttributeSet* AttributeSet = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	TSubclassOf<UAttributeSet> AttributeSetClass;
-
-	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	TSubclassOf<UGameplayEffect> InitialAttributesEffectClass;
-
-	UPROPERTY()
-	bool bAttributesInitialized = false;
 };

@@ -1,9 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "TestTaskSolution/Core/TtAbilitySystemComponent.h"
-#include "GameplayTagContainer.h"
+#include "TestTaskSolution/Combat/AbilityComponent/TtAbilitySystemComponent.h"
 #include "TestTask.h"
-#include "GameFramework/PlayerState.h"
+#include "TestTaskSolution/Combat/Attributes/TtAttributeSet.h"
+
+UTtAbilitySystemComponent::UTtAbilitySystemComponent()
+{
+	AttributeSetClass = UTtAttributeSet::StaticClass();
+}
 
 void UTtAbilitySystemComponent::InitializeAbilitySystemComponent(AActor* InOwnerActor, AActor* InAvatarActor)
 {
@@ -30,11 +34,14 @@ void UTtAbilitySystemComponent::InitializeAbilitySystemComponent(AActor* InOwner
 	
 }
 
-void UTtAbilitySystemComponent::InitializeAttributeSet(
-	TSubclassOf<UAttributeSet> InAttributeSetClass,
-	TSubclassOf<UGameplayEffect> InitialEffect)
+void UTtAbilitySystemComponent::InitializeAttributeSet()
 {
-	if (!InAttributeSetClass)
+	if (AttributeSet)
+	{
+		return;
+	}
+
+	if (!AttributeSetClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: AttributeSetClass is null"));
 		return;
@@ -47,21 +54,22 @@ void UTtAbilitySystemComponent::InitializeAttributeSet(
 		return;
 	}
 
-	UAttributeSet* AttributeSet = NewObject<UAttributeSet>(OwningActor, InAttributeSetClass);
-	if (!AttributeSet)
+	UAttributeSet* CreatedAttributeSet = NewObject<UAttributeSet>(OwningActor, AttributeSetClass);
+	if (!CreatedAttributeSet)
 	{
 		UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: Failed to create AttributeSet"));
 		return;
 	}
 	
-	AddAttributeSetSubobject(AttributeSet);
+	AddAttributeSetSubobject(CreatedAttributeSet);
+	AttributeSet = Cast<UTtAttributeSet>(CreatedAttributeSet);
 
-	if (InitialEffect)
+	if (InitializeAttributesEffectClass)
 	{
 		FGameplayEffectContextHandle Context = MakeEffectContext();
 		Context.AddSourceObject(GetAvatarActor() ? GetAvatarActor() : OwningActor);
 
-		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingSpec(InitialEffect, 1.f, Context);
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingSpec(InitializeAttributesEffectClass, 1.f, Context);
 		if (SpecHandle.IsValid())
 		{
 			ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
@@ -71,4 +79,9 @@ void UTtAbilitySystemComponent::InitializeAttributeSet(
 			UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: Failed to create GE Spec"));
 		}
 	}
+}
+
+const UTtAttributeSet* UTtAbilitySystemComponent::GetAttributeSet() const
+{
+	return AttributeSet;
 }
