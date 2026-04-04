@@ -29,18 +29,18 @@ class TESTTASK_API UTtAmmoData : public UDataAsset
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo")
 	FGameplayTag AmmoTag;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo")
 	FText DisplayName;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Projectile")
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Projectile")
 	TObjectPtr<UTtProjectileData> ProjectileDataOverride;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo")
 	TSubclassOf<UGameplayAbility> EquipAmmoAbilityClass;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
+	UPROPERTY(EditDefaultsOnly, Category="Projectile")
 	TSubclassOf<UGameplayEffect> OnHitEffectClass;
 };

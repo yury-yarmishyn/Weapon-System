@@ -17,34 +17,21 @@ UTtWeaponComponent::UTtWeaponComponent()
 
 bool UTtWeaponComponent::CanEquipWeapon(const UTtWeaponData* WeaponData) const
 {
-	// Placeholder for future save system or other non gameplay validation
-	
-	if (!WeaponData)
-	{
-		return false;
-	}
-
-	if (const AActor* OwnerActor = GetOwner(); !OwnerActor)
-	{
-		return false;
-	}
-	
 	return true;
 }
 
 bool UTtWeaponComponent::CanEquipAmmo(const UTtAmmoData* AmmoData) const
 {
-	// Placeholder
-	const AActor* OwnerActor = GetOwner();
-	if (!OwnerActor)
-	{
-		return false;
-	}
-	
 	return true;
 }
 
-void UTtWeaponComponent::EquipWeapon(const UTtWeaponData* WeaponData)
+void UTtWeaponComponent::EquipWeaponBySlot(const ETtWeaponSlot InWeaponSlot)
+{
+	UTtWeaponData** InWeaponData = ActiveWeaponDataByWeaponSlots.Find(InWeaponSlot);
+	EquipWeaponByData(*InWeaponData);
+}
+
+void UTtWeaponComponent::EquipWeaponByData(const UTtWeaponData* WeaponData)
 {
 	AActor* OwnerActor = GetOwner();
 
@@ -60,25 +47,96 @@ void UTtWeaponComponent::EquipWeapon(const UTtWeaponData* WeaponData)
 	);
 }
 
-void UTtWeaponComponent::EquipAmmo(const UTtAmmoData* AmmoData)
+void UTtWeaponComponent::EquipAmmoBySlot(const ETtAmmoSlot InAmmoSlot)
 {
-	
+	UTtAmmoData** InAmmoData = AmmoDataBySlot.Find(InAmmoSlot);
+	EquipAmmoByData(*InAmmoData);
 }
 
-void UTtWeaponComponent::Shoot(const UTtAmmoData* AmmoData)
+void UTtWeaponComponent::EquipAmmoByData(const UTtAmmoData* AmmoData)
 {
+	AActor* OwnerActor = GetOwner();
+
+	FGameplayEventData EventData;
+	EventData.EventTag = FTtGameplayTags::Get().Event_Ammo_Equip;
+	EventData.Instigator = OwnerActor;
+	EventData.OptionalObject = AmmoData;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+		OwnerActor,
+		EventData.EventTag,
+		EventData
+	);
+}
+
+void UTtWeaponComponent::Fire(const UTtAmmoData* AmmoData)
+{
+	AActor* OwnerActor = GetOwner();
+
+	FGameplayEventData EventData;
+	EventData.EventTag = FTtGameplayTags::Get().Event_Weapon_Fire;
+	EventData.Instigator = OwnerActor;
+	EventData.OptionalObject = AmmoData;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+		OwnerActor,
+		EventData.EventTag,
+		EventData
+	);
 }
 
 void UTtWeaponComponent::Reload(const ETtWeaponSlot InWeaponSlot)
 {
+	AActor* OwnerActor = GetOwner();
+
+	FGameplayEventData EventData;
+	EventData.EventTag = FTtGameplayTags::Get().Event_Weapon_Reload;
+	EventData.Instigator = OwnerActor;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+		OwnerActor,
+		EventData.EventTag,
+		EventData
+	);
 }
 
 void UTtWeaponComponent::ReloadAll()
 {
+	AActor* OwnerActor = GetOwner();
+	
+	for (const TPair<ETtWeaponSlot, UTtWeaponData*>& Pair : ActiveWeaponDataByWeaponSlots)
+	{
+		UTtWeaponData* WeaponData = Pair.Value;
+		if (!WeaponData)
+		{
+			continue;
+		}
+
+		FGameplayEventData EventData;
+		EventData.EventTag = FTtGameplayTags::Get().Event_Weapon_Reload;
+		EventData.Instigator = OwnerActor;
+		EventData.OptionalObject = WeaponData;
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			OwnerActor,
+			EventData.EventTag,
+			EventData
+		);
+	}
 }
 
 void UTtWeaponComponent::DecreaseAmmoInSlot(ETtWeaponSlot InWeaponSlot, int32 InValue)
-{
+{	
+	if (int32* AmmoPtr = AmmoByWeaponSlots.Find(InWeaponSlot))
+	{
+		int32 OldValue = *AmmoPtr;
+		*AmmoPtr -= InValue;
+		
+		if (OldValue != *AmmoPtr)
+		{
+			OnAmmoByWeaponSlotsChanged.Broadcast();
+		}
+	}
 }
 
 void UTtWeaponComponent::SetCurrentAmmoSlot(ETtAmmoSlot NewAmmoSlot)
@@ -95,10 +153,16 @@ void UTtWeaponComponent::SetCurrentWeaponSlot(ETtWeaponSlot NewWeaponSlot)
 	OnWeaponSlotChanged.Broadcast(OldWeaponSlot);
 }
 
-void UTtWeaponComponent::SetCurrentAmmoByWeaponSlots(const TMap<ETtWeaponSlot, int32>& NewCurrentAmmoByWeaponSlots)
+void UTtWeaponComponent::SetAmmoByWeaponSlots(const TMap<ETtWeaponSlot, int32>& NewAmmoByWeaponSlots)
 {
-	CurrentAmmoByWeaponSlots = NewCurrentAmmoByWeaponSlots;
-	OnCurrentAmmoByWeaponSlotsChanged.Broadcast();
+	AmmoByWeaponSlots = NewAmmoByWeaponSlots;
+	OnAmmoByWeaponSlotsChanged.Broadcast();
+}
+
+void UTtWeaponComponent::SetAmmoDataBySlot(const TMap<ETtAmmoSlot, UTtAmmoData*>& NewAmmoDataBySlot)
+{
+	AmmoDataBySlot = NewAmmoDataBySlot;
+	OnAmmoDataBySlotChanged.Broadcast();
 }
 
 void UTtWeaponComponent::SetActiveAmmoSlotsByWeaponSlots(

@@ -41,9 +41,6 @@ public:
 	TObjectPtr<UTtProjectileData> ProjectileData;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
-	TMap<ETtAmmoSlot, UTtAmmoData> AmmoSlotByData;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	int32 MagazineSize = 30;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Abilities")
