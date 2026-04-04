@@ -5,18 +5,18 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 
-/**
- * Centralized native gameplay tags used by the TestTaskSolution runtime.
- */
+
 struct TESTTASK_API FTtGameplayTags
 {
 public:
 	static const FTtGameplayTags& Get();
 	static void InitializeNativeGameplayTags();
-
+	
 	FGameplayTag Event_Weapon_Fire;
 	FGameplayTag Event_Weapon_Reload;
 	FGameplayTag Event_Weapon_Equip;
+	
+	FGameplayTag Event_Ammo_Equip;
 
 	FGameplayTag Ammo_Regular;
 	FGameplayTag Ammo_Fire;

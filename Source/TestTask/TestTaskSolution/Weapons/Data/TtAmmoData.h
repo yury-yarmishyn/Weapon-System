@@ -1,13 +1,16 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "TtWeaponTypes.generated.h"
+#include "Engine/DataAsset.h"
+#include "TtAmmoData.generated.h"
 
-class ATtProjectile;
+class UGameplayEffect;
+class UTtProjectileData;
 class UGameplayAbility;
+class ATtProjectile;
 
 UENUM(BlueprintType)
 enum class ETtAmmoSlot : uint8
@@ -18,29 +21,26 @@ enum class ETtAmmoSlot : uint8
 	Slot4 UMETA(DisplayName = "Slot 4")
 };
 
-USTRUCT(BlueprintType)
-struct FTtAmmoDefinition
+/**
+ * 
+ */
+UCLASS()
+class TESTTASK_API UTtAmmoData : public UDataAsset
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
-	FName AmmoId = NAME_None;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
-	FText DisplayName;
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	FGameplayTag AmmoTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
-	TSubclassOf<ATtProjectile> ProjectileClassOverride;
+	FText DisplayName;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Projectile")
+	TObjectPtr<UTtProjectileData> ProjectileDataOverride;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	TSubclassOf<UGameplayAbility> EquipAmmoAbilityClass;
-};
-
-class TESTTASK_API FTtWeaponTypes final
-{
-public:
-	FTtWeaponTypes();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
+	TSubclassOf<UGameplayEffect> OnHitEffectClass;
 };

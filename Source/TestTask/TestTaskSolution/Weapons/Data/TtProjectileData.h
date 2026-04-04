@@ -13,6 +13,9 @@ class TESTTASK_API UTtProjectileData : public UDataAsset
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
+	TSubclassOf<ATtProjectile> ProjectileClass;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
 	float CollisionRadius = 8.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")

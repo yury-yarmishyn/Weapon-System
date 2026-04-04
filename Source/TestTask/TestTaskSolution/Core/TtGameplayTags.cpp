@@ -12,11 +12,6 @@ const FTtGameplayTags& FTtGameplayTags::Get()
 
 void FTtGameplayTags::InitializeNativeGameplayTags()
 {
-	if (GameplayTags.Event_Weapon_Fire.IsValid())
-	{
-		return;
-	}
-
 	UGameplayTagsManager& TagsManager = UGameplayTagsManager::Get();
 
 	GameplayTags.Event_Weapon_Fire = TagsManager.AddNativeGameplayTag(
@@ -27,10 +22,14 @@ void FTtGameplayTags::InitializeNativeGameplayTags()
     	TEXT("Event.Weapon.Reload"),
     	TEXT("Gameplay event used to activate weapon reload ability."));
 	
-	GameplayTags.Event_Weapon_Reload = TagsManager.AddNativeGameplayTag(
-	TEXT("Event.Weapon.Equip"),
-	TEXT("Gameplay event used to activate weapon equip ability."));
+	GameplayTags.Event_Weapon_Equip = TagsManager.AddNativeGameplayTag(
+		TEXT("Event.Weapon.Equip"),
+		TEXT("Gameplay event used to activate weapon equip ability."));
 
+	GameplayTags.Event_Ammo_Equip = TagsManager.AddNativeGameplayTag(
+		TEXT("Event.Ammo.Equip"),
+		TEXT("Gameplay event used to activate ammo equip ability."));
+	
 	GameplayTags.Ammo_Regular = TagsManager.AddNativeGameplayTag(
 		TEXT("Ammo.Regular"),
 		TEXT("Regular ammo behavior."));
