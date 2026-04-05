@@ -36,9 +36,6 @@ class TESTTASK_API UTtWeaponData : public UDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
 	FText DisplayName;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Projectile")
-	TObjectPtr<UTtProjectileData> ProjectileData;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	int32 MagazineSize = 30;

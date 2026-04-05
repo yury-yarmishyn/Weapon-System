@@ -6,6 +6,9 @@
 #include "Engine/DataAsset.h"
 #include "TtProjectileData.generated.h"
 
+class UGameplayEffect;
+class ATtProjectile;
+
 UCLASS(BlueprintType)
 class TESTTASK_API UTtProjectileData : public UDataAsset
 {
@@ -14,6 +17,9 @@ class TESTTASK_API UTtProjectileData : public UDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
 	TSubclassOf<ATtProjectile> ProjectileClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Projectile")
+	TSubclassOf<UGameplayEffect> OnHitEffectClass;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
 	float CollisionRadius = 8.f;

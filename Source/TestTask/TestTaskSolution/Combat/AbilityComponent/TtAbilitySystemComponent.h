@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	TSubclassOf<UAttributeSet> AttributeSetClass;
 
-	UPROPERTY(EditDefaultsOnly, Category="GAS")
+	UPROPERTY(EditAnywhere, Category="GAS")
 	TSubclassOf<UGameplayEffect> InitializeAttributesEffectClass;
 
 	UPROPERTY()

@@ -207,6 +207,7 @@ void ATtPlayer::AmmoSlot4Input()
 
 void ATtPlayer::EquipAmmoInput(const ETtAmmoSlot AmmoSlot)
 {
+	
 	if (!WeaponComponent)
 	{
 		return;

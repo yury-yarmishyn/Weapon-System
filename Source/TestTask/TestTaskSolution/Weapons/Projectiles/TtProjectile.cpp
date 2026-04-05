@@ -1,59 +1,89 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TestTaskSolution/Weapons/Projectiles/TtProjectile.h"
-#include "GameFramework/ProjectileMovementComponent.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "GameplayEffect.h"
 #include "TestTask.h"
 #include "TestTaskSolution/Weapons/Data/TtProjectileData.h"
 
 ATtProjectile::ATtProjectile()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	bReplicates = true;
-	AActor::SetReplicateMovement(true);
 
-	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
-	CollisionComponent->InitSphereRadius(8.f);
+	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
+	SetRootComponent(CollisionComponent);
+
+	CollisionComponent->SetSphereRadius(8.f);
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
-	SetRootComponent(CollisionComponent);
+	CollisionComponent->SetGenerateOverlapEvents(false);
+	CollisionComponent->CanCharacterStepUpOn = ECB_No;
+	CollisionComponent->OnComponentHit.AddDynamic(this, &ATtProjectile::OnCollisionHit);
 
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovementComponent->UpdatedComponent = CollisionComponent;
-	ProjectileMovementComponent->InitialSpeed = 2500.f;
-	ProjectileMovementComponent->MaxSpeed = 2500.f;
-	ProjectileMovementComponent->ProjectileGravityScale = 0.f;
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
-	ProjectileMovementComponent->bShouldBounce = false;
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovement->UpdatedComponent = CollisionComponent;
+	ProjectileMovement->InitialSpeed = 2500.f;
+	ProjectileMovement->MaxSpeed = 2500.f;
+	ProjectileMovement->ProjectileGravityScale = 0.f;
+	ProjectileMovement->bShouldBounce = false;
+	ProjectileMovement->bRotationFollowsVelocity = true;
+	ProjectileMovement->bInitialVelocityInLocalSpace = true;
 }
 
 void ATtProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (AActor* InstigatorActor = GetInstigator())
+	{
+		CollisionComponent->IgnoreActorWhenMoving(InstigatorActor, true);
+	}
+
 	if (AActor* ProjectileOwner = GetOwner())
 	{
 		CollisionComponent->IgnoreActorWhenMoving(ProjectileOwner, true);
 	}
 
-	if (ProjectileData)
-	{
-		CollisionComponent->SetSphereRadius(ProjectileData->CollisionRadius);
-		ProjectileMovementComponent->InitialSpeed = ProjectileData->InitialSpeed;
-		ProjectileMovementComponent->MaxSpeed = ProjectileData->MaxSpeed;
-		ProjectileMovementComponent->ProjectileGravityScale = ProjectileData->GravityScale;
-		ProjectileMovementComponent->bShouldBounce = ProjectileData->bShouldBounce;
-		LifeSeconds = ProjectileData->LifeSeconds;
-		bDestroyOnImpact = ProjectileData->bDestroyOnHit;
-	}
-
-	CollisionComponent->OnComponentHit.AddDynamic(this, &ATtProjectile::HandleCollisionHit);
-	SetLifeSpan(LifeSeconds);
+	InitProjectile();
 }
 
-void ATtProjectile::HandleCollisionHit(
+void ATtProjectile::InitProjectile()
+{
+	if (!ProjectileData)
+	{
+		UE_LOG(LogTestTask, Warning, TEXT("Projectile %s has no ProjectileData assigned"), *GetName());
+		return;
+	}
+
+	if (CollisionComponent)
+	{
+		CollisionComponent->SetSphereRadius(ProjectileData->CollisionRadius);
+	}
+
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
+		ProjectileMovement->MaxSpeed = ProjectileData->MaxSpeed;
+		ProjectileMovement->ProjectileGravityScale = ProjectileData->GravityScale;
+		ProjectileMovement->bShouldBounce = ProjectileData->bShouldBounce;
+
+		const FVector LaunchVelocity = GetActorForwardVector() * ProjectileMovement->InitialSpeed;
+		ProjectileMovement->Velocity = LaunchVelocity;
+	}
+
+	if (ProjectileData->LifeSeconds > 0.f)
+	{
+		SetLifeSpan(ProjectileData->LifeSeconds);
+	}
+}
+
+void ATtProjectile::OnCollisionHit(
 	UPrimitiveComponent* HitComponent,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
@@ -63,47 +93,52 @@ void ATtProjectile::HandleCollisionHit(
 	(void)HitComponent;
 	(void)OtherComp;
 	(void)NormalImpulse;
+	(void)Hit;
 
-	if (!OtherActor || OtherActor == this || OtherActor == GetOwner())
+	if (!OtherActor || OtherActor == this)
 	{
 		return;
 	}
 
-	UE_LOG(
-		LogTestTask,
-		Log,
-		TEXT("Projectile hit: Projectile=%s Target=%s"),
-		*GetNameSafe(this),
-		*GetNameSafe(OtherActor));
+	ApplyOnHitEffect(OtherActor);
+	Destroy();
+}
 
-	FTtProjectileImpactContext ImpactContext;
-	BuildImpactContext(OtherActor, Hit, ImpactContext);
-	ForwardImpactToEffectPipeline(ImpactContext);
-
-	if (bDestroyOnImpact)
+void ATtProjectile::ApplyOnHitEffect(AActor* HitActor) const
+{
+	if (!HitActor || !ProjectileData || !ProjectileData->OnHitEffectClass)
 	{
-		Destroy();
+		return;
 	}
-}
 
-void ATtProjectile::BuildImpactContext(AActor* HitActor, const FHitResult& HitResult, FTtProjectileImpactContext& OutContext) const
-{
-	OutContext.ProjectileOwner = GetOwner();
-	OutContext.ProjectileInstigator = GetInstigator();
-	OutContext.HitActor = HitActor;
-	OutContext.HitResult = HitResult;
-}
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+	if (!TargetASC)
+	{
+		return;
+	}
 
-void ATtProjectile::ForwardImpactToEffectPipeline(const FTtProjectileImpactContext& ImpactContext)
-{
-	UE_LOG(
-		LogTestTask,
-		Log,
-		TEXT("Projectile impact forwarded to effect pipeline. Projectile=%s Target=%s Owner=%s Instigator=%s ImpactPoint=%s Bone=%s"),
-		*GetNameSafe(this),
-		*GetNameSafe(ImpactContext.HitActor),
-		*GetNameSafe(ImpactContext.ProjectileOwner),
-		*GetNameSafe(ImpactContext.ProjectileInstigator),
-		*ImpactContext.HitResult.ImpactPoint.ToCompactString(),
-		*ImpactContext.HitResult.BoneName.ToString());
+	UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetInstigator());
+	if (!SourceASC)
+	{
+		SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	}
+
+	if (!SourceASC)
+	{
+		FGameplayEffectContextHandle Context = TargetASC->MakeEffectContext();
+		Context.AddSourceObject(this);
+		TargetASC->ApplyGameplayEffectToSelf(ProjectileData->OnHitEffectClass->GetDefaultObject<UGameplayEffect>(), 1.f, Context);
+		return;
+	}
+
+	FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
+	Context.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(ProjectileData->OnHitEffectClass, 1.f, Context);
+	if (!SpecHandle.IsValid())
+	{
+		return;
+	}
+
+	SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
 }

@@ -12,10 +12,10 @@ class USkeletalMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTtOnAmmoSlotChanged, ETtAmmoSlot, OldAmmoSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTtOnWeaponSlotChanged, ETtWeaponSlot, OldWeaponSlot);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnAmmoByWeaponSlotsChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnActiveAmmoSlotsByWeaponSlotsChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnActiveWeaponDataByWeaponSlotsChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnAmmoDataBySlotChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnWeaponSlotByAmmoChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnWeaponSlotByAmmoSlotChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnWeaponSlotByWeaponDataChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTtOnAmmoSlotByAmmoDataChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TESTTASK_API UTtWeaponComponent : public UActorComponent
@@ -24,6 +24,14 @@ class TESTTASK_API UTtWeaponComponent : public UActorComponent
 
 public:
 	UTtWeaponComponent();
+
+	UFUNCTION(BlueprintCallable, Category="Weapon")
+	void InitWeaponComponent(
+		const TMap<ETtWeaponSlot, UTtWeaponData*>& DefaultWeaponSlotsByData,
+		const TMap<ETtAmmoSlot, UTtAmmoData*>& DefaultAmmoSlotsByData);
+
+	UFUNCTION(BlueprintCallable, Category="Weapon")
+	void GrantAbilitiesFromData();
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	bool CanEquipWeapon(const UTtWeaponData* WeaponData) const;
@@ -64,16 +72,16 @@ public:
 	ETtWeaponSlot GetCurrentWeaponSlot() const { return CurrentWeaponSlot; }
 
 	UFUNCTION(BlueprintPure, Category="Weapon")
-	const TMap<ETtWeaponSlot, int32>& GetAmmoByWeaponSlots() const { return AmmoByWeaponSlots; }
+	const TMap<ETtWeaponSlot, int32>& GetWeaponSlotByAmmo() const { return WeaponSlotByAmmo; }
 	
 	UFUNCTION(BlueprintPure, Category="Weapon")
-	const TMap<ETtAmmoSlot, UTtAmmoData*>& GetAmmoDataBySlot() const { return AmmoDataBySlot; }
+	const TMap<ETtAmmoSlot, UTtAmmoData*>& GetAmmoSlotByAmmoData() const { return AmmoSlotByAmmoData; }
 
 	UFUNCTION(BlueprintPure, Category="Weapon")
-	const TMap<ETtWeaponSlot, ETtAmmoSlot>& GetActiveAmmoSlotsByWeaponSlots() const { return ActiveAmmoSlotsByWeaponSlots; }
+	const TMap<ETtWeaponSlot, ETtAmmoSlot>& GetWeaponSlotByAmmoSlot() const { return WeaponSlotByAmmoSlot; }
 
 	UFUNCTION(BlueprintPure, Category="Weapon")
-	const TMap<ETtWeaponSlot, UTtWeaponData*>& GetActiveWeaponDataByWeaponSlots() const { return ActiveWeaponDataByWeaponSlots; }
+	const TMap<ETtWeaponSlot, UTtWeaponData*>& GetWeaponSlotByWeaponData() const { return WeaponSlotByWeaponData; }
 	
 	// Setters
 	
@@ -84,16 +92,16 @@ public:
 	void SetCurrentWeaponSlot(ETtWeaponSlot NewWeaponSlot);
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void SetAmmoByWeaponSlots(const TMap<ETtWeaponSlot, int32>& NewAmmoByWeaponSlots);
+	void SetWeaponSlotByAmmo(const TMap<ETtWeaponSlot, int32>& NewWeaponSlotByAmmo);
 	
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void SetAmmoDataBySlot(const TMap<ETtAmmoSlot, UTtAmmoData*>& NewAmmoDataBySlot);
+	void SetAmmoSlotByAmmoData(const TMap<ETtAmmoSlot, UTtAmmoData*>& NewAmmoSlotByAmmoData);
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void SetActiveAmmoSlotsByWeaponSlots(const TMap<ETtWeaponSlot, ETtAmmoSlot>& NewActiveAmmoSlotsByWeaponSlots);
+	void SetWeaponSlotByAmmoSlot(const TMap<ETtWeaponSlot, ETtAmmoSlot>& NewWeaponSlotByAmmoSlot);
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void SetActiveWeaponDataByWeaponSlots(const TMap<ETtWeaponSlot, UTtWeaponData*>& NewActiveWeaponDataByWeaponSlots);
+	void SetWeaponSlotByWeaponData(const TMap<ETtWeaponSlot, UTtWeaponData*>& NewWeaponSlotByWeaponData);
 	
 	// Dispatchers
 	
@@ -104,16 +112,16 @@ public:
 	FTtOnWeaponSlotChanged OnWeaponSlotChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="Weapon|Events")
-	FTtOnAmmoByWeaponSlotsChanged OnAmmoByWeaponSlotsChanged;
+	FTtOnWeaponSlotByAmmoChanged OnWeaponSlotByAmmoChanged;
 	
 	UPROPERTY(BlueprintAssignable, Category="Weapon|Events")
-	FTtOnAmmoDataBySlotChanged OnAmmoDataBySlotChanged;
+	FTtOnAmmoSlotByAmmoDataChanged OnAmmoSlotByAmmoDataChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="Weapon|Events")
-	FTtOnActiveAmmoSlotsByWeaponSlotsChanged OnActiveAmmoSlotsByWeaponSlotsChanged;
+	FTtOnWeaponSlotByAmmoSlotChanged OnWeaponSlotByAmmoSlotChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="Weapon|Events")
-	FTtOnActiveWeaponDataByWeaponSlotsChanged OnActiveWeaponDataByWeaponSlotsChanged;
+	FTtOnWeaponSlotByWeaponDataChanged OnWeaponSlotByWeaponDataChanged;
 	
 
 private:
@@ -124,16 +132,16 @@ private:
 	ETtWeaponSlot CurrentWeaponSlot = ETtWeaponSlot::Slot1;
 	
 	UPROPERTY(Transient)
-	TMap<ETtWeaponSlot, int32> AmmoByWeaponSlots;
+	TMap<ETtWeaponSlot, int32> WeaponSlotByAmmo;
 	
 	UPROPERTY(Transient)
-	TMap<ETtAmmoSlot, UTtAmmoData*> AmmoDataBySlot;
+	TMap<ETtAmmoSlot, UTtAmmoData*> AmmoSlotByAmmoData;
 
 	UPROPERTY(Transient)
-	TMap<ETtWeaponSlot, ETtAmmoSlot> ActiveAmmoSlotsByWeaponSlots;
+	TMap<ETtWeaponSlot, ETtAmmoSlot> WeaponSlotByAmmoSlot;
 	
 	UPROPERTY(Transient)
-	TMap<ETtWeaponSlot, UTtWeaponData*> ActiveWeaponDataByWeaponSlots;
+	TMap<ETtWeaponSlot, UTtWeaponData*> WeaponSlotByWeaponData;
 	
 	UPROPERTY(Transient)
 	TObjectPtr<USkeletalMeshComponent> WeaponHandler = nullptr;
