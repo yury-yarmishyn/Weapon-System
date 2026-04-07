@@ -6,6 +6,9 @@
 #include "TtCharacter.h"
 #include "TtEnemy.generated.h"
 
+struct FGameplayTag;
+class UWidgetComponent;
+
 UCLASS()
 class TESTTASK_API ATtEnemy : public ATtCharacter
 {
@@ -15,6 +18,15 @@ public:
 	ATtEnemy();
 
 protected:
-	virtual void BeginPlay() override;
-	void InitializeCharacterOwnedAbilitySystem();
+	virtual void InitializeAbilitySystem() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+private:
+	void BindBurningTagEvents();
+	void HandleBurningTagChanged(FGameplayTag InTag, int32 NewCount);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent;
+
+	FDelegateHandle BurningTagChangedHandle;
 };

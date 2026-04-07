@@ -23,9 +23,9 @@ UTtWeaponComponent* UTtGameplayAbility::GetWeaponComponentFromActorInfo(const FG
 		return nullptr;
 	}
 
-	if (const ITtWeaponInterface* WeaponInterface = Cast<ITtWeaponInterface>(AvatarActor))
+	if (AvatarActor->GetClass()->ImplementsInterface(UTtWeaponInterface::StaticClass()))
 	{
-		return WeaponInterface->GetWeaponComponent();
+		return ITtWeaponInterface::Execute_GetWeaponComponent(AvatarActor);
 	}
 
 	return nullptr;

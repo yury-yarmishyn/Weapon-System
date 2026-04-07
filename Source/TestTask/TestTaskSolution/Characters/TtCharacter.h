@@ -23,6 +23,9 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
+	virtual void BeginPlay() override;
+	virtual void InitializeAbilitySystem();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS")
 	TObjectPtr<UTtAbilitySystemComponent> AbilitySystemComponent;
 };

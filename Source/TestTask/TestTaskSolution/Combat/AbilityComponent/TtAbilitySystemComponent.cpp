@@ -43,21 +43,21 @@ void UTtAbilitySystemComponent::InitializeAttributeSet()
 
 	if (!AttributeSetClass)
 	{
-		UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: AttributeSetClass is null"));
+		UE_LOG(LogTestTask, Error, TEXT("InitializeAttributeSet: AttributeSetClass is null"));
 		return;
 	}
 
 	AActor* OwningActor = GetOwner();
 	if (!OwningActor)
 	{
-		UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: Owning actor is null"));
+		UE_LOG(LogTestTask, Error, TEXT("InitializeAttributeSet: Owning actor is null"));
 		return;
 	}
 
 	UAttributeSet* CreatedAttributeSet = NewObject<UAttributeSet>(OwningActor, AttributeSetClass);
 	if (!CreatedAttributeSet)
 	{
-		UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: Failed to create AttributeSet"));
+		UE_LOG(LogTestTask, Error, TEXT("InitializeAttributeSet: Failed to create AttributeSet"));
 		return;
 	}
 	
@@ -73,10 +73,16 @@ void UTtAbilitySystemComponent::InitializeAttributeSet()
 		if (SpecHandle.IsValid())
 		{
 			ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			UE_LOG(
+				LogTestTask,
+				Log,
+				TEXT("InitializeAttributeSet: Applied init effect %s to %s"),
+				*GetNameSafe(InitializeAttributesEffectClass),
+				*GetNameSafe(OwningActor));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("InitializeAttributeSet: Failed to create GE Spec"));
+			UE_LOG(LogTestTask, Error, TEXT("InitializeAttributeSet: Failed to create GE Spec"));
 		}
 	}
 }

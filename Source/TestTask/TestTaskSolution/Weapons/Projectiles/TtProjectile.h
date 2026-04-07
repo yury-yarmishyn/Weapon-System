@@ -30,11 +30,12 @@ protected:
 
 	UFUNCTION()
 	void OnCollisionHit(
-		UPrimitiveComponent* HitComponent,
+		UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
-		FVector NormalImpulse,
-		const FHitResult& Hit);
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
 
 private:
 	void ApplyOnHitEffect(AActor* HitActor) const;

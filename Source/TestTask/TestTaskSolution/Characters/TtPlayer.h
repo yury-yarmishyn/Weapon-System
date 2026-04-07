@@ -5,9 +5,10 @@
 #include "CoreMinimal.h"
 #include "TtCharacter.h"
 #include "TestTaskSolution/Weapons/Interfaces/TtWeaponInterface.h"
+#include "Weapons/Data/TtAmmoData.h"
+#include "Weapons/Data/TtWeaponData.h"
 #include "TtPlayer.generated.h"
 
-enum class ETtAmmoSlot : uint8;
 class UCameraComponent;
 class USkeletalMeshComponent;
 class UTtWeaponComponent;
@@ -22,8 +23,9 @@ class TESTTASK_API ATtPlayer : public ATtCharacter, public ITtWeaponInterface
 
 public:
 	ATtPlayer();
-	virtual USkeletalMeshComponent* GetWeaponHandler() const override;
-	virtual UTtWeaponComponent* GetWeaponComponent() const override;
+	virtual USkeletalMeshComponent* GetWeaponHandler_Implementation() const override;
+	virtual USkeletalMeshComponent* GetWeaponMesh_Implementation() const override;
+	virtual UTtWeaponComponent* GetWeaponComponent_Implementation() const override;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Move(const FVector2D& MoveInput);
@@ -45,9 +47,18 @@ protected:
 	void AmmoSlot2Input();
 	void AmmoSlot3Input();
 	void AmmoSlot4Input();
+	void NextWeaponInput();
+	void PrevWeaponInput();
 	void EquipAmmoInput(ETtAmmoSlot AmmoSlot);
+	virtual void InitializeAbilitySystem() override;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Init")
+	TMap<ETtWeaponSlot, UTtWeaponData*> DefaultWeaponSlotsByData;
+
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Init")
+	TMap<ETtAmmoSlot, UTtAmmoData*> DefaultAmmoSlotsByData;
+
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> FireAction = nullptr;
 
@@ -82,7 +93,7 @@ protected:
 	TObjectPtr<UInputAction> JumpAction = nullptr;
 
 private:
-	void InitializeAbilitySystemFromPlayerState();
+	void InitializeWeaponComponent();
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
@@ -92,5 +103,11 @@ private:
 	TObjectPtr<USkeletalMeshComponent> WeaponHandler;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UTtWeaponComponent> WeaponComponent;
+
+	bool bWeaponComponentInitialized = false;
+	bool bWeaponAbilitiesGranted = false;
 };

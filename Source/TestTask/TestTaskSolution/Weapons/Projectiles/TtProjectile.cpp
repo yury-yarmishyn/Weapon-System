@@ -18,13 +18,12 @@ ATtProjectile::ATtProjectile()
 	SetRootComponent(CollisionComponent);
 
 	CollisionComponent->SetSphereRadius(8.f);
-	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
-	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
-	CollisionComponent->SetNotifyRigidBodyCollision(true);
-	CollisionComponent->SetGenerateOverlapEvents(false);
+	CollisionComponent->SetCollisionProfileName(TEXT("OverlapAll"));
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionComponent->SetGenerateOverlapEvents(true);
 	CollisionComponent->CanCharacterStepUpOn = ECB_No;
-	CollisionComponent->OnComponentHit.AddDynamic(this, &ATtProjectile::OnCollisionHit);
+	CollisionComponent->SetHiddenInGame(false);
+	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ATtProjectile::OnCollisionHit);
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComponent;
@@ -45,11 +44,6 @@ void ATtProjectile::BeginPlay()
 		CollisionComponent->IgnoreActorWhenMoving(InstigatorActor, true);
 	}
 
-	if (AActor* ProjectileOwner = GetOwner())
-	{
-		CollisionComponent->IgnoreActorWhenMoving(ProjectileOwner, true);
-	}
-
 	InitProjectile();
 }
 
@@ -64,6 +58,7 @@ void ATtProjectile::InitProjectile()
 	if (CollisionComponent)
 	{
 		CollisionComponent->SetSphereRadius(ProjectileData->CollisionRadius);
+		CollisionComponent->ShapeColor = ProjectileData->ProjectileColor.ToFColor(true);
 	}
 
 	if (ProjectileMovement)
@@ -84,21 +79,30 @@ void ATtProjectile::InitProjectile()
 }
 
 void ATtProjectile::OnCollisionHit(
-	UPrimitiveComponent* HitComponent,
+	UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse,
-	const FHitResult& Hit)
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
 {
-	(void)HitComponent;
+	(void)OverlappedComponent;
 	(void)OtherComp;
-	(void)NormalImpulse;
-	(void)Hit;
+	(void)OtherBodyIndex;
+	(void)bFromSweep;
+	(void)SweepResult;
 
-	if (!OtherActor || OtherActor == this)
+	if (!OtherActor || OtherActor == this || OtherActor == GetInstigator() || OtherActor == GetOwner())
 	{
 		return;
 	}
+
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Projectile hit actor %s"),
+		*GetNameSafe(this),
+		*GetNameSafe(OtherActor));
 
 	ApplyOnHitEffect(OtherActor);
 	Destroy();
@@ -109,6 +113,24 @@ void ATtProjectile::ApplyOnHitEffect(AActor* HitActor) const
 	if (!HitActor || !ProjectileData || !ProjectileData->OnHitEffectClass)
 	{
 		return;
+	}
+
+	const FString EffectClassName = GetNameSafe(ProjectileData->OnHitEffectClass);
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Applying on-hit effect %s to %s"),
+		*GetNameSafe(this),
+		*EffectClassName,
+		*GetNameSafe(HitActor));
+
+	if (EffectClassName.Contains(TEXT("FireHit")))
+	{
+		UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire requested"), *GetNameSafe(HitActor));
+	}
+	else if (EffectClassName.Contains(TEXT("WaterHit")))
+	{
+		UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire removal requested"), *GetNameSafe(HitActor));
 	}
 
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);

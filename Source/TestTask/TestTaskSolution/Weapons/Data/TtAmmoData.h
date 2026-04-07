@@ -7,7 +7,6 @@
 #include "Engine/DataAsset.h"
 #include "TtAmmoData.generated.h"
 
-class UGameplayEffect;
 class UTtProjectileData;
 class UGameplayAbility;
 
@@ -29,19 +28,17 @@ class TESTTASK_API UTtAmmoData : public UDataAsset
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	FGameplayTag AmmoTag;
 
-	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	FText DisplayName;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	TSubclassOf<UGameplayAbility> EquipAmmoAbilityClass;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Weapon|Projectile")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Projectile")
 	TObjectPtr<UTtProjectileData> ProjectileData;
 	
-	// Replace with HitScanData in future if needed.
-	UPROPERTY(EditDefaultsOnly, Category="Weapon|Ammo|HitScan")
-	TSubclassOf<UGameplayEffect> OnHitEffectClass;
+	// Can be extended with dedicated hit-scan data in future without changing projectile flow.
 };

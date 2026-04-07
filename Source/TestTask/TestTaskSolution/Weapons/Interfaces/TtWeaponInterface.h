@@ -23,7 +23,12 @@ class TESTTASK_API ITtWeaponInterface
 	GENERATED_BODY()
 
 public:
-	virtual USkeletalMeshComponent* GetWeaponHandler() const = 0;
-	virtual UTtWeaponComponent* GetWeaponComponent() const = 0;
-};
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Weapon")
+	USkeletalMeshComponent* GetWeaponHandler() const;
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Weapon")
+	USkeletalMeshComponent* GetWeaponMesh() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Weapon")
+	UTtWeaponComponent* GetWeaponComponent() const;
+};

@@ -10,6 +10,7 @@
 
 
 class ATtProjectile;
+class UAnimInstance;
 class UAnimMontage;
 class UGameplayAbility;
 class USkeletalMesh;
@@ -46,11 +47,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Abilities")
 	TSubclassOf<UGameplayAbility> ReloadAbilityClass;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Abilities")
 	TSubclassOf<UGameplayAbility> EquipAbilityClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Visuals")
 	TObjectPtr<USkeletalMesh> WeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Visuals")
+	TSubclassOf<UAnimInstance> AnimInstanceClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Visuals")
+	FName MuzzleSocketName = TEXT("Muzzle");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Animations")
 	TObjectPtr<UAnimMontage> FireMontage;

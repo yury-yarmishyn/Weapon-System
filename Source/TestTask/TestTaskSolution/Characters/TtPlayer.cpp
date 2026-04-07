@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TestTaskSolution/Characters/TtPlayer.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -15,13 +16,17 @@ ATtPlayer::ATtPlayer()
 	PrimaryActorTick.bCanEverTick = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	CameraComponent->SetupAttachment(RootComponent);
+	CameraComponent->SetupAttachment(GetMesh());
 	CameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 64.0f));
 	CameraComponent->bUsePawnControlRotation = true;
 
 	WeaponHandler = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponHandler"));
 	WeaponHandler->SetupAttachment(CameraComponent);
 	WeaponHandler->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMesh->SetupAttachment(WeaponHandler);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	WeaponComponent = CreateDefaultSubobject<UTtWeaponComponent>(TEXT("WeaponComponent"));
 }
@@ -30,21 +35,23 @@ void ATtPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitializeAbilitySystemFromPlayerState();
+	InitializeWeaponComponent();
 }
 
 void ATtPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	InitializeAbilitySystemFromPlayerState();
+	InitializeAbilitySystem();
+	InitializeWeaponComponent();
 }
 
 void ATtPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	InitializeAbilitySystemFromPlayerState();
+	InitializeAbilitySystem();
+	InitializeWeaponComponent();
 }
 
 void ATtPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -92,6 +99,16 @@ void ATtPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		{
 			EnhancedInputComponent->BindAction(AmmoSlot4Action, ETriggerEvent::Started, this, &ATtPlayer::AmmoSlot4Input);
 		}
+
+		if (NextWeaponAction)
+		{
+			EnhancedInputComponent->BindAction(NextWeaponAction, ETriggerEvent::Started, this, &ATtPlayer::NextWeaponInput);
+		}
+
+		if (PrevWeaponAction)
+		{
+			EnhancedInputComponent->BindAction(PrevWeaponAction, ETriggerEvent::Started, this, &ATtPlayer::PrevWeaponInput);
+		}
 		
 		if (JumpAction)
 		{
@@ -104,17 +121,22 @@ void ATtPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	}
 }
 
-USkeletalMeshComponent* ATtPlayer::GetWeaponHandler() const
+USkeletalMeshComponent* ATtPlayer::GetWeaponHandler_Implementation() const
 {
 	return WeaponHandler;
 }
 
-UTtWeaponComponent* ATtPlayer::GetWeaponComponent() const
+USkeletalMeshComponent* ATtPlayer::GetWeaponMesh_Implementation() const
+{
+	return WeaponMesh;
+}
+
+UTtWeaponComponent* ATtPlayer::GetWeaponComponent_Implementation() const
 {
 	return WeaponComponent;
 }
 
-void ATtPlayer::InitializeAbilitySystemFromPlayerState()
+void ATtPlayer::InitializeAbilitySystem()
 {
 	ATtPlayerState* TtPlayerState = GetPlayerState<ATtPlayerState>();
 	if (!TtPlayerState)
@@ -129,6 +151,41 @@ void ATtPlayer::InitializeAbilitySystemFromPlayerState()
 	}
 
 	TtAbilitySystemComponent->InitializeAbilitySystemComponent(TtPlayerState, this);
+}
+
+void ATtPlayer::InitializeWeaponComponent()
+{
+	if (!WeaponComponent)
+	{
+		return;
+	}
+
+	if (!bWeaponComponentInitialized)
+	{
+		WeaponComponent->InitWeaponComponent(DefaultWeaponSlotsByData, DefaultAmmoSlotsByData);
+		bWeaponComponentInitialized = true;
+
+		UE_LOG(
+			LogTestTask,
+			Log,
+			TEXT("[%s] WeaponComponent initialized. Weapon slots: %d, ammo slots: %d"),
+			*GetNameSafe(this),
+			DefaultWeaponSlotsByData.Num(),
+			DefaultAmmoSlotsByData.Num());
+	}
+
+	if (!HasAuthority() || bWeaponAbilitiesGranted)
+	{
+		return;
+	}
+
+	if (!UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(this))
+	{
+		return;
+	}
+
+	WeaponComponent->GrantAbilitiesFromInitData();
+	bWeaponAbilitiesGranted = true;
 }
 
 void ATtPlayer::Move(const FVector2D& MoveInput)
@@ -172,7 +229,14 @@ void ATtPlayer::FireInput()
 		return;
 	}
 
-	WeaponComponent->Fire(nullptr);
+	const ETtWeaponSlot CurrentWeaponSlot = WeaponComponent->GetCurrentWeaponSlot();
+	ETtAmmoSlot CurrentAmmoSlot = WeaponComponent->GetCurrentAmmoSlot();
+	if (const ETtAmmoSlot* WeaponAmmoSlot = WeaponComponent->GetWeaponSlotByAmmoSlot().Find(CurrentWeaponSlot))
+	{
+		CurrentAmmoSlot = *WeaponAmmoSlot;
+	}
+
+	WeaponComponent->FireBySlot(CurrentAmmoSlot);
 }
 
 void ATtPlayer::ReloadInput()
@@ -182,7 +246,13 @@ void ATtPlayer::ReloadInput()
 		return;
 	}
 
-	WeaponComponent->Reload(WeaponComponent->GetCurrentWeaponSlot());
+	const ETtWeaponSlot CurrentWeaponSlot = WeaponComponent->GetCurrentWeaponSlot();
+	if (!WeaponComponent->CanEquipWeapon(CurrentWeaponSlot))
+	{
+		return;
+	}
+
+	WeaponComponent->Reload(CurrentWeaponSlot);
 }
 
 void ATtPlayer::AmmoSlot1Input()
@@ -205,9 +275,30 @@ void ATtPlayer::AmmoSlot4Input()
 	EquipAmmoInput(ETtAmmoSlot::Slot4);
 }
 
+void ATtPlayer::NextWeaponInput()
+{
+	if (!WeaponComponent)
+	{
+		return;
+	}
+
+	const ETtWeaponSlot NextWeaponSlot = WeaponComponent->GetNextWeapon(WeaponComponent->GetCurrentWeaponSlot());
+	WeaponComponent->EquipWeaponBySlot(NextWeaponSlot);
+}
+
+void ATtPlayer::PrevWeaponInput()
+{
+	if (!WeaponComponent)
+	{
+		return;
+	}
+
+	const ETtWeaponSlot PrevWeaponSlot = WeaponComponent->GetPrevWeapon(WeaponComponent->GetCurrentWeaponSlot());
+	WeaponComponent->EquipWeaponBySlot(PrevWeaponSlot);
+}
+
 void ATtPlayer::EquipAmmoInput(const ETtAmmoSlot AmmoSlot)
 {
-	
 	if (!WeaponComponent)
 	{
 		return;

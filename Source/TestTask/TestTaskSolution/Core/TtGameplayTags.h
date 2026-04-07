@@ -2,29 +2,24 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "NativeGameplayTags.h"
 
-
-struct TESTTASK_API FTtGameplayTags
+namespace TtGameplayTags
 {
-public:
-	static const FTtGameplayTags& Get();
-	static void InitializeNativeGameplayTags();
-	
-	FGameplayTag Event_Weapon_Fire;
-	FGameplayTag Event_Weapon_Reload;
-	FGameplayTag Event_Weapon_Equip;
-	
-	FGameplayTag Event_Ammo_Equip;
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Event_Weapon_Fire);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Event_Weapon_Reload);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Event_Weapon_Equip);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Event_Ammo_Equip);
 
-	FGameplayTag Ammo_Regular;
-	FGameplayTag Ammo_Fire;
-	FGameplayTag Ammo_Water;
-	FGameplayTag Ammo_Healing;
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ammo_Regular);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ammo_Fire);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ammo_Water);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ammo_Healing);
 
-	FGameplayTag Status_Burning;
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Status_Burning);
 
-private:
-	static FTtGameplayTags GameplayTags;
-};
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Data_Damage_Physical);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Data_Damage_Fire);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Data_Damage_Water);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Data_Healing);
+}

@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Weapons/Projectiles/TtProjectile.h"
 #include "TtProjectileData.generated.h"
 
 class UGameplayEffect;
-class ATtProjectile;
 
 UCLASS(BlueprintType)
 class TESTTASK_API UTtProjectileData : public UDataAsset
@@ -38,6 +38,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
 	bool bShouldBounce = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile|Visual")
+	FLinearColor ProjectileColor = FLinearColor::White;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
 	bool bDestroyOnHit = true;

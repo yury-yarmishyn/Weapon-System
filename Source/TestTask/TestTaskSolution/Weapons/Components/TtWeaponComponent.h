@@ -31,13 +31,22 @@ public:
 		const TMap<ETtAmmoSlot, UTtAmmoData*>& DefaultAmmoSlotsByData);
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void GrantAbilitiesFromData();
+	void GrantAbilitiesFromInitData();
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	bool CanEquipWeapon(const UTtWeaponData* WeaponData) const;
+	bool CanEquipWeapon(ETtWeaponSlot WeaponSlot) const;
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	bool CanEquipAmmo(const UTtAmmoData* AmmoData) const;
+	bool CanEquipAmmo(ETtAmmoSlot AmmoSlot) const;
+
+	UFUNCTION(BlueprintCallable, Category="Weapon")
+	bool CanFire(ETtAmmoSlot AmmoSlot) const;
+
+	UFUNCTION(BlueprintPure, Category="Weapon")
+	ETtWeaponSlot GetNextWeapon(ETtWeaponSlot InCurrentWeaponSlot) const;
+
+	UFUNCTION(BlueprintPure, Category="Weapon")
+	ETtWeaponSlot GetPrevWeapon(ETtWeaponSlot InCurrentWeaponSlot) const;
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void EquipWeaponBySlot(const ETtWeaponSlot InWeaponSlot);
@@ -53,6 +62,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void Fire(const UTtAmmoData* AmmoData);
+
+	UFUNCTION(BlueprintCallable, Category="Weapon")
+	void FireBySlot(ETtAmmoSlot AmmoSlot);
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void Reload(const ETtWeaponSlot InWeaponSlot);
@@ -99,6 +111,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void SetWeaponSlotByAmmoSlot(const TMap<ETtWeaponSlot, ETtAmmoSlot>& NewWeaponSlotByAmmoSlot);
+
+	UFUNCTION(BlueprintCallable, Category="Weapon")
+	void SetAmmoSlotForWeapon(ETtWeaponSlot WeaponSlot, ETtAmmoSlot NewAmmoSlot);
 
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void SetWeaponSlotByWeaponData(const TMap<ETtWeaponSlot, UTtWeaponData*>& NewWeaponSlotByWeaponData);

@@ -31,9 +31,54 @@ void UTtAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	const FString EffectName = Data.EffectSpec.Def ? Data.EffectSpec.Def->GetName() : TEXT("UnknownEffect");
+	
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
+		const float OldHealth = GetHealth();
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+
+		const float NewHealth = GetHealth();
+		const float EvaluatedDelta = Data.EvaluatedData.Magnitude;
+		if (EvaluatedDelta < 0.f)
+		{
+			UE_LOG(
+				LogTestTask,
+				Log,
+				TEXT("[%s] Damage applied: %.2f via %s"),
+				*GetNameSafe(GetOwningActor()),
+				FMath::Abs(EvaluatedDelta),
+				*EffectName);
+		}
+		else if (EvaluatedDelta > 0.f)
+		{
+			UE_LOG(
+				LogTestTask,
+				Log,
+				TEXT("[%s] Healing applied: %.2f via %s"),
+				*GetNameSafe(GetOwningActor()),
+				EvaluatedDelta,
+				*EffectName);
+		}
+
+		if (EffectName.Contains(TEXT("GE_Burning")))
+		{
+			UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire tick"), *GetNameSafe(GetOwningActor()));
+		}
+		else if (EffectName.Contains(TEXT("GE_FireHit")))
+		{
+			UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire applied"), *GetNameSafe(GetOwningActor()));
+		}
+		else if (EffectName.Contains(TEXT("GE_WaterHit")))
+		{
+			UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire removed"), *GetNameSafe(GetOwningActor()));
+		}
+
+		if (OldHealth > 0.f && NewHealth <= 0.f)
+		{
+			UE_LOG(LogTestTask, Warning, TEXT("[%s] Health depleted. Death reached"), *GetNameSafe(GetOwningActor()));
+		}
+
 		return;
 	}
 

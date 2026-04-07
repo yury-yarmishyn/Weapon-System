@@ -20,4 +20,15 @@ protected:
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
+
+	virtual bool CommitAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
+
+private:
+	TWeakObjectPtr<UTtWeaponComponent> PendingWeaponComponent;
+	ETtWeaponSlot PendingWeaponSlot = ETtWeaponSlot::Slot1;
+	int32 PendingAmmoAfterReload = 0;
 };

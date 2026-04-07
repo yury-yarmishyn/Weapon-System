@@ -9,6 +9,12 @@ ATtCharacter::ATtCharacter()
 	PrimaryActorTick.bCanEverTick = false;
 }
 
+void ATtCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	InitializeAbilitySystem();
+}
+
 UAbilitySystemComponent* ATtCharacter::GetAbilitySystemComponent() const
 {
 	if (const ATtPlayerState* TtPlayerState = GetPlayerState<ATtPlayerState>())
@@ -17,4 +23,8 @@ UAbilitySystemComponent* ATtCharacter::GetAbilitySystemComponent() const
 	}
 
 	return AbilitySystemComponent;
+}
+
+void ATtCharacter::InitializeAbilitySystem()
+{
 }
