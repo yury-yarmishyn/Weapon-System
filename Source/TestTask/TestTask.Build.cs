@@ -28,11 +28,7 @@ public class TestTask : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"TestTask",
-			"TestTask/TestTaskSolution",
-			"TestTask/Variant_Shooter",
-			"TestTask/Variant_Shooter/AI",
-			"TestTask/Variant_Shooter/UI",
-			"TestTask/Variant_Shooter/Weapons"
+			"TestTask/TestTaskSolution"
 		});
 
 		// Uncomment if you are using Slate UI
