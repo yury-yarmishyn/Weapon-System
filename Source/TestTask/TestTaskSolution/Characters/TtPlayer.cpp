@@ -141,16 +141,25 @@ void ATtPlayer::InitializeAbilitySystem()
 	ATtPlayerState* TtPlayerState = GetPlayerState<ATtPlayerState>();
 	if (!TtPlayerState)
 	{
+		UE_LOG(LogTestTask, Verbose, TEXT("[%s] InitializeAbilitySystem skipped: PlayerState is null"), *GetNameSafe(this));
 		return;
 	}
 
 	UTtAbilitySystemComponent* TtAbilitySystemComponent = TtPlayerState->GetTtAbilitySystemComponent();
 	if (!TtAbilitySystemComponent)
 	{
+		UE_LOG(LogTestTask, Error, TEXT("[%s] InitializeAbilitySystem failed: TtAbilitySystemComponent is null"), *GetNameSafe(this));
 		return;
 	}
 
 	TtAbilitySystemComponent->InitializeAbilitySystemComponent(TtPlayerState, this);
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] InitializeAbilitySystem completed. Owner=%s Avatar=%s"),
+		*GetNameSafe(this),
+		*GetNameSafe(TtPlayerState),
+		*GetNameSafe(this));
 }
 
 void ATtPlayer::InitializeWeaponComponent()
@@ -249,6 +258,12 @@ void ATtPlayer::ReloadInput()
 	const ETtWeaponSlot CurrentWeaponSlot = WeaponComponent->GetCurrentWeaponSlot();
 	if (!WeaponComponent->CanEquipWeapon(CurrentWeaponSlot))
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] Reload input ignored: weapon slot %d is not equipped"),
+			*GetNameSafe(this),
+			static_cast<int32>(CurrentWeaponSlot));
 		return;
 	}
 
@@ -304,5 +319,11 @@ void ATtPlayer::EquipAmmoInput(const ETtAmmoSlot AmmoSlot)
 		return;
 	}
 
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Ammo slot input received: %d"),
+		*GetNameSafe(this),
+		static_cast<int32>(AmmoSlot));
 	WeaponComponent->EquipAmmoBySlot(AmmoSlot);
 }

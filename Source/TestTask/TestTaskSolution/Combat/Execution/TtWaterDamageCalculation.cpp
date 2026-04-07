@@ -65,10 +65,8 @@ float UTtWaterDamageCalculation::CalculateBaseMagnitude_Implementation(const FGa
 		FMath::Max(0.f, FireResistance) * 0.5f +
 		FMath::Max(0.f, WaterResistance) * 1.0f;
 
-	const float SafeMaxHealth = FMath::Max(MaxHealth, KINDA_SMALL_NUMBER);
-	const float DamageMultiplier = SafeMaxHealth / (SafeMaxHealth + WeightedResistance);
-	const float DamageRaw = FMath::Max(0.f, BaseDamageMultiplier);
-	const float FinalDamage = DamageRaw * DamageMultiplier;
+	const float ResistanceScale = FMath::Max(1.f, MaxHealth);
+	const float DamageMultiplier = ResistanceScale / (ResistanceScale + WeightedResistance);
 
-	return DamageRaw > 0.f ? (FinalDamage / DamageRaw) : 0.f;
+	return FMath::Max(0.f, BaseDamageMultiplier) * DamageMultiplier;
 }

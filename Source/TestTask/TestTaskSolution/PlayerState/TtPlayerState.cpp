@@ -2,6 +2,7 @@
 
 #include "TestTaskSolution/PlayerState/TtPlayerState.h"
 #include "TestTaskSolution/Combat/AbilityComponent/TtAbilitySystemComponent.h"
+#include "TestTask.h"
 
 ATtPlayerState::ATtPlayerState()
 {
@@ -33,6 +34,7 @@ void ATtPlayerState::BeginPlay()
 
 	if (!AbilitySystemComponent)
 	{
+		UE_LOG(LogTestTask, Error, TEXT("[%s] BeginPlay: AbilitySystemComponent is null"), *GetNameSafe(this));
 		return;
 	}
 
@@ -45,12 +47,20 @@ void ATtPlayerState::BeginPlay()
 		}
 
 		AbilitySystemComponent->InitializeAbilitySystemComponent(this, AvatarActor);
+		UE_LOG(
+			LogTestTask,
+			Log,
+			TEXT("[%s] BeginPlay: ASC actor info initialized. Avatar=%s"),
+			*GetNameSafe(this),
+			*GetNameSafe(AvatarActor));
 	}
 
 	if (!HasAuthority())
 	{
+		UE_LOG(LogTestTask, Verbose, TEXT("[%s] BeginPlay: skipping AttributeSet init on client"), *GetNameSafe(this));
 		return;
 	}
 
 	AbilitySystemComponent->InitializeAttributeSet();
+	UE_LOG(LogTestTask, Log, TEXT("[%s] BeginPlay: server AttributeSet initialization requested"), *GetNameSafe(this));
 }

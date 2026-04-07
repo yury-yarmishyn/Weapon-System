@@ -31,6 +31,7 @@ void UTtEquipAmmoAbility::ActivateAbility(
 	UTtWeaponComponent* WeaponComponent = GetWeaponComponentFromActorInfo(ActorInfo);
 	if (!WeaponComponent)
 	{
+		UE_LOG(LogTestTask, Warning, TEXT("EquipAmmoAbility rejected: weapon component is missing"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -51,6 +52,13 @@ void UTtEquipAmmoAbility::ActivateAbility(
 
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] EquipAmmoAbility commit failed. WeaponSlot=%d AmmoSlot=%d"),
+			*GetNameSafe(WeaponComponent->GetOwner()),
+			static_cast<int32>(PendingWeaponSlot),
+			static_cast<int32>(PendingAmmoSlot));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}

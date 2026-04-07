@@ -39,7 +39,12 @@ void UTtFireProjectileAbility::ActivateAbility(
 	UTtWeaponComponent* WeaponComponent = GetWeaponComponentFromActorInfo(ActorInfo);
 	if (!AvatarActor || !WeaponComponent)
 	{
-		UE_LOG(LogTestTask, Warning, TEXT("Fire ability activation rejected: missing avatar or weapon component"));
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("Fire ability activation rejected: missing avatar (%s) or weapon component (%s)"),
+			AvatarActor ? TEXT("true") : TEXT("false"),
+			WeaponComponent ? TEXT("true") : TEXT("false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -139,6 +144,11 @@ void UTtFireProjectileAbility::ActivateAbility(
 
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] Fire ability commit failed. Projectile will be rolled back"),
+			*GetNameSafe(AvatarActor));
 		if (IsValid(SpawnedProjectile))
 		{
 			SpawnedProjectile->Destroy();
@@ -160,11 +170,17 @@ bool UTtFireProjectileAbility::CommitAbility(
 	UTtWeaponComponent* WeaponComponent = PendingWeaponComponent.Get();
 	if (!WeaponComponent)
 	{
+		UE_LOG(LogTestTask, Warning, TEXT("Fire ability commit rejected: pending weapon component is invalid"));
 		return false;
 	}
 
 	if (!Super::CommitAbility(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags))
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] Fire ability commit rejected by Super::CommitAbility"),
+			*GetNameSafe(WeaponComponent->GetOwner()));
 		return false;
 	}
 

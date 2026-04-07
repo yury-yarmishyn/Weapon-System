@@ -45,33 +45,24 @@ void UTtAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 			UE_LOG(
 				LogTestTask,
 				Log,
-				TEXT("[%s] Damage applied: %.2f via %s"),
+				TEXT("[%s] Damage applied: %.2f via %s (Health %.2f -> %.2f)"),
 				*GetNameSafe(GetOwningActor()),
 				FMath::Abs(EvaluatedDelta),
-				*EffectName);
+				*EffectName,
+				OldHealth,
+				NewHealth);
 		}
 		else if (EvaluatedDelta > 0.f)
 		{
 			UE_LOG(
 				LogTestTask,
 				Log,
-				TEXT("[%s] Healing applied: %.2f via %s"),
+				TEXT("[%s] Healing applied: %.2f via %s (Health %.2f -> %.2f)"),
 				*GetNameSafe(GetOwningActor()),
 				EvaluatedDelta,
-				*EffectName);
-		}
-
-		if (EffectName.Contains(TEXT("GE_Burning")))
-		{
-			UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire tick"), *GetNameSafe(GetOwningActor()));
-		}
-		else if (EffectName.Contains(TEXT("GE_FireHit")))
-		{
-			UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire applied"), *GetNameSafe(GetOwningActor()));
-		}
-		else if (EffectName.Contains(TEXT("GE_WaterHit")))
-		{
-			UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire removed"), *GetNameSafe(GetOwningActor()));
+				*EffectName,
+				OldHealth,
+				NewHealth);
 		}
 
 		if (OldHealth > 0.f && NewHealth <= 0.f)

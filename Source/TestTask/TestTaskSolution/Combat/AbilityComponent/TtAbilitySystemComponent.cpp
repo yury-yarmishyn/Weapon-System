@@ -30,14 +30,17 @@ void UTtAbilitySystemComponent::InitializeAbilitySystemComponent(AActor* InOwner
 		TEXT("ASC initialized. Owner=%s Avatar=%s"),
 		*GetNameSafe(InOwnerActor),
 		*GetNameSafe(InAvatarActor));
-	
-	
 }
 
 void UTtAbilitySystemComponent::InitializeAttributeSet()
 {
 	if (AttributeSet)
 	{
+		UE_LOG(
+			LogTestTask,
+			Verbose,
+			TEXT("InitializeAttributeSet skipped: AttributeSet already initialized for %s"),
+			*GetNameSafe(GetOwner()));
 		return;
 	}
 
@@ -63,6 +66,12 @@ void UTtAbilitySystemComponent::InitializeAttributeSet()
 	
 	AddAttributeSetSubobject(CreatedAttributeSet);
 	AttributeSet = Cast<UTtAttributeSet>(CreatedAttributeSet);
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("InitializeAttributeSet: Created AttributeSet %s for %s"),
+		*GetNameSafe(AttributeSet),
+		*GetNameSafe(OwningActor));
 
 	if (InitializeAttributesEffectClass)
 	{
@@ -84,6 +93,14 @@ void UTtAbilitySystemComponent::InitializeAttributeSet()
 		{
 			UE_LOG(LogTestTask, Error, TEXT("InitializeAttributeSet: Failed to create GE Spec"));
 		}
+	}
+	else
+	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("InitializeAttributeSet: InitializeAttributesEffectClass is not set for %s"),
+			*GetNameSafe(OwningActor));
 	}
 }
 

@@ -136,18 +136,15 @@ void ATtProjectile::ApplyOnHitEffect(AActor* HitActor) const
 		*EffectClassName,
 		*GetNameSafe(HitActor));
 
-	if (EffectClassName.Contains(TEXT("FireHit")))
-	{
-		UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire requested"), *GetNameSafe(HitActor));
-	}
-	else if (EffectClassName.Contains(TEXT("WaterHit")))
-	{
-		UE_LOG(LogTestTask, Log, TEXT("[%s] On Fire removal requested"), *GetNameSafe(HitActor));
-	}
-
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 	if (!TargetASC)
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] On-hit effect skipped: target %s has no ASC"),
+			*GetNameSafe(this),
+			*GetNameSafe(HitActor));
 		return;
 	}
 
@@ -162,6 +159,11 @@ void ATtProjectile::ApplyOnHitEffect(AActor* HitActor) const
 		FGameplayEffectContextHandle Context = TargetASC->MakeEffectContext();
 		Context.AddSourceObject(this);
 		TargetASC->ApplyGameplayEffectToSelf(ProjectileData->OnHitEffectClass->GetDefaultObject<UGameplayEffect>(), 1.f, Context);
+		UE_LOG(
+			LogTestTask,
+			Verbose,
+			TEXT("[%s] Applied effect via fallback TargetASC->ApplyGameplayEffectToSelf"),
+			*GetNameSafe(this));
 		return;
 	}
 
@@ -171,8 +173,19 @@ void ATtProjectile::ApplyOnHitEffect(AActor* HitActor) const
 	FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(ProjectileData->OnHitEffectClass, 1.f, Context);
 	if (!SpecHandle.IsValid())
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] Failed to create outgoing spec for effect %s"),
+			*GetNameSafe(this),
+			*EffectClassName);
 		return;
 	}
 
 	SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+	UE_LOG(
+		LogTestTask,
+		Verbose,
+		TEXT("[%s] Effect spec applied to target ASC"),
+		*GetNameSafe(this));
 }

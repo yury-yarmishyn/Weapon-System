@@ -31,6 +31,7 @@ void UTtReloadAbility::ActivateAbility(
 	UTtWeaponComponent* WeaponComponent = GetWeaponComponentFromActorInfo(ActorInfo);
 	if (!WeaponComponent)
 	{
+		UE_LOG(LogTestTask, Warning, TEXT("ReloadAbility rejected: weapon component is missing"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -84,6 +85,12 @@ void UTtReloadAbility::ActivateAbility(
 
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] ReloadAbility commit failed. WeaponSlot=%d"),
+			*GetNameSafe(WeaponComponent->GetOwner()),
+			static_cast<int32>(PendingWeaponSlot));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}

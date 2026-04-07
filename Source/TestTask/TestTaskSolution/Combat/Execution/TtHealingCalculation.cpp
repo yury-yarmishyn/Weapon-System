@@ -25,7 +25,5 @@ float UTtHealingCalculation::CalculateBaseMagnitude_Implementation(const FGamepl
 	GetCapturedAttributeMagnitude(DamageDef, Spec, EvaluationParameters, HealingValue);
 
 	const float HealingRaw = FMath::Max(0.f, HealingValue);
-	const float FinalHealing = -HealingRaw;
-
-	return HealingRaw > 0.f ? (FinalHealing / HealingRaw) : 0.f;
+	return HealingRaw;
 }

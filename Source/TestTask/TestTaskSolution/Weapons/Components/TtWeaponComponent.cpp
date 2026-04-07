@@ -305,6 +305,17 @@ void UTtWeaponComponent::EquipWeaponBySlot(const ETtWeaponSlot InWeaponSlot)
 void UTtWeaponComponent::EquipWeaponByData(const UTtWeaponData* WeaponData)
 {
 	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		UE_LOG(LogTestTask, Error, TEXT("EquipWeaponByData failed: owner is null"));
+		return;
+	}
+
+	if (!WeaponData)
+	{
+		UE_LOG(LogTestTask, Warning, TEXT("[%s] EquipWeaponByData rejected: WeaponData is null"), *GetNameSafe(OwnerActor));
+		return;
+	}
 
 	UE_LOG(
 		LogTestTask,
@@ -347,6 +358,17 @@ void UTtWeaponComponent::EquipAmmoBySlot(const ETtAmmoSlot InAmmoSlot)
 void UTtWeaponComponent::EquipAmmoByData(const UTtAmmoData* AmmoData)
 {
 	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		UE_LOG(LogTestTask, Error, TEXT("EquipAmmoByData failed: owner is null"));
+		return;
+	}
+
+	if (!AmmoData)
+	{
+		UE_LOG(LogTestTask, Warning, TEXT("[%s] EquipAmmoByData rejected: AmmoData is null"), *GetNameSafe(OwnerActor));
+		return;
+	}
 
 	UE_LOG(
 		LogTestTask,
@@ -370,6 +392,17 @@ void UTtWeaponComponent::EquipAmmoByData(const UTtAmmoData* AmmoData)
 void UTtWeaponComponent::Fire(const UTtAmmoData* AmmoData)
 {
 	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		UE_LOG(LogTestTask, Error, TEXT("Fire failed: owner is null"));
+		return;
+	}
+
+	if (!AmmoData)
+	{
+		UE_LOG(LogTestTask, Warning, TEXT("[%s] Fire rejected: AmmoData is null"), *GetNameSafe(OwnerActor));
+		return;
+	}
 
 	UE_LOG(
 		LogTestTask,
@@ -396,13 +429,22 @@ void UTtWeaponComponent::FireBySlot(const ETtAmmoSlot AmmoSlot)
 {
 	if (!CanFire(AmmoSlot))
 	{
+		const int32 CurrentAmmo = WeaponSlotByAmmo.FindRef(CurrentWeaponSlot);
+		const UTtAmmoData* const* AmmoDataPtr = AmmoSlotByAmmoData.Find(AmmoSlot);
+		const UTtAmmoData* AmmoData = AmmoDataPtr ? *AmmoDataPtr : nullptr;
+		const bool bHasProjectileClass = AmmoData && AmmoData->ProjectileData && AmmoData->ProjectileData->ProjectileClass;
+
 		UE_LOG(
 			LogTestTask,
 			Warning,
-			TEXT("[%s] FireBySlot rejected. WeaponSlot=%d AmmoSlot=%d"),
+			TEXT("[%s] FireBySlot rejected. WeaponSlot=%d AmmoSlot=%d AmmoInMag=%d CanEquipWeapon=%s CanEquipAmmo=%s HasProjectileClass=%s"),
 			*GetNameSafe(GetOwner()),
 			static_cast<int32>(CurrentWeaponSlot),
-			static_cast<int32>(AmmoSlot));
+			static_cast<int32>(AmmoSlot),
+			CurrentAmmo,
+			CanEquipWeapon(CurrentWeaponSlot) ? TEXT("true") : TEXT("false"),
+			CanEquipAmmo(AmmoSlot) ? TEXT("true") : TEXT("false"),
+			bHasProjectileClass ? TEXT("true") : TEXT("false"));
 		return;
 	}
 
@@ -419,6 +461,12 @@ void UTtWeaponComponent::FireBySlot(const ETtAmmoSlot AmmoSlot)
 void UTtWeaponComponent::Reload(const ETtWeaponSlot InWeaponSlot)
 {
 	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		UE_LOG(LogTestTask, Error, TEXT("Reload failed: owner is null"));
+		return;
+	}
+
 	UTtWeaponData* ReloadWeaponData = nullptr;
 	if (UTtWeaponData* const* FoundWeaponData = WeaponSlotByWeaponData.Find(InWeaponSlot))
 	{
@@ -448,6 +496,11 @@ void UTtWeaponComponent::Reload(const ETtWeaponSlot InWeaponSlot)
 void UTtWeaponComponent::ReloadAll()
 {
 	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		UE_LOG(LogTestTask, Error, TEXT("ReloadAll failed: owner is null"));
+		return;
+	}
 	
 	UE_LOG(LogTestTask, Log, TEXT("[%s] ReloadAll requested"), *GetNameSafe(OwnerActor));
 	
@@ -469,6 +522,14 @@ void UTtWeaponComponent::ReloadAll()
 			EventData.EventTag,
 			EventData
 		);
+
+		UE_LOG(
+			LogTestTask,
+			Verbose,
+			TEXT("[%s] ReloadAll dispatched for weapon slot %d (%s)"),
+			*GetNameSafe(OwnerActor),
+			static_cast<int32>(Pair.Key),
+			*GetNameSafe(WeaponData));
 	}
 }
 
@@ -484,9 +545,10 @@ void UTtWeaponComponent::DecreaseAmmoInSlot(ETtWeaponSlot InWeaponSlot, int32 In
 			UE_LOG(
 				LogTestTask,
 				Log,
-				TEXT("[%s] Ammo consumed. WeaponSlot=%d Old=%d New=%d"),
+				TEXT("[%s] Ammo consumed. WeaponSlot=%d Delta=-%d Old=%d New=%d"),
 				*GetNameSafe(GetOwner()),
 				static_cast<int32>(InWeaponSlot),
+				InValue,
 				OldValue,
 				*AmmoPtr);
 			OnWeaponSlotByAmmoChanged.Broadcast();
@@ -535,12 +597,24 @@ void UTtWeaponComponent::SetCurrentWeaponSlot(ETtWeaponSlot NewWeaponSlot)
 void UTtWeaponComponent::SetWeaponSlotByAmmo(const TMap<ETtWeaponSlot, int32>& NewWeaponSlotByAmmo)
 {
 	WeaponSlotByAmmo = NewWeaponSlotByAmmo;
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Weapon ammo map updated. Entries=%d"),
+		*GetNameSafe(GetOwner()),
+		WeaponSlotByAmmo.Num());
 	OnWeaponSlotByAmmoChanged.Broadcast();
 }
 
 void UTtWeaponComponent::SetAmmoSlotByAmmoData(const TMap<ETtAmmoSlot, UTtAmmoData*>& NewAmmoSlotByAmmoData)
 {
 	AmmoSlotByAmmoData = NewAmmoSlotByAmmoData;
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Ammo data map updated. Entries=%d"),
+		*GetNameSafe(GetOwner()),
+		AmmoSlotByAmmoData.Num());
 	OnAmmoSlotByAmmoDataChanged.Broadcast();
 }
 
@@ -548,6 +622,12 @@ void UTtWeaponComponent::SetWeaponSlotByAmmoSlot(
 	const TMap<ETtWeaponSlot, ETtAmmoSlot>& NewWeaponSlotByAmmoSlot)
 {
 	WeaponSlotByAmmoSlot = NewWeaponSlotByAmmoSlot;
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Weapon->AmmoSlot map updated. Entries=%d"),
+		*GetNameSafe(GetOwner()),
+		WeaponSlotByAmmoSlot.Num());
 	OnWeaponSlotByAmmoSlotChanged.Broadcast();
 }
 
@@ -576,5 +656,11 @@ void UTtWeaponComponent::SetWeaponSlotByWeaponData(
 	const TMap<ETtWeaponSlot, UTtWeaponData*>& NewWeaponSlotByWeaponData)
 {
 	WeaponSlotByWeaponData = NewWeaponSlotByWeaponData;
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Weapon data map updated. Entries=%d"),
+		*GetNameSafe(GetOwner()),
+		WeaponSlotByWeaponData.Num());
 	OnWeaponSlotByWeaponDataChanged.Broadcast();
 }

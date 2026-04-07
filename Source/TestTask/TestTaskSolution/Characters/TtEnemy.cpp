@@ -3,6 +3,7 @@
 #include "TestTaskSolution/Characters/TtEnemy.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/WidgetComponent.h"
+#include "TestTask.h"
 #include "TestTaskSolution/Combat/AbilityComponent/TtAbilitySystemComponent.h"
 #include "TestTaskSolution/Core/TtGameplayTags.h"
 
@@ -42,10 +43,12 @@ void ATtEnemy::InitializeAbilitySystem()
 {
 	if (!AbilitySystemComponent)
 	{
+		UE_LOG(LogTestTask, Error, TEXT("[%s] InitializeAbilitySystem failed: AbilitySystemComponent is null"), *GetNameSafe(this));
 		return;
 	}
 
 	AbilitySystemComponent->InitializeAbilitySystemComponent(this, this);
+	UE_LOG(LogTestTask, Log, TEXT("[%s] Enemy ASC initialized"), *GetNameSafe(this));
 	BindBurningTagEvents();
 
 	if (!HasAuthority())
@@ -54,6 +57,7 @@ void ATtEnemy::InitializeAbilitySystem()
 	}
 
 	AbilitySystemComponent->InitializeAttributeSet();
+	UE_LOG(LogTestTask, Log, TEXT("[%s] Enemy AttributeSet initialization requested"), *GetNameSafe(this));
 }
 
 void ATtEnemy::BindBurningTagEvents()
@@ -89,4 +93,12 @@ void ATtEnemy::HandleBurningTagChanged(FGameplayTag InTag, int32 NewCount)
 	MeshComponent->SetVectorParameterValueOnMaterials(
 		BurningTintParameterName,
 		bEnable ? BurningTintColor : DefaultTintColor);
+
+	UE_LOG(
+		LogTestTask,
+		Log,
+		TEXT("[%s] Burning status changed: %s (TagCount=%d)"),
+		*GetNameSafe(this),
+		bEnable ? TEXT("active") : TEXT("inactive"),
+		NewCount);
 }
