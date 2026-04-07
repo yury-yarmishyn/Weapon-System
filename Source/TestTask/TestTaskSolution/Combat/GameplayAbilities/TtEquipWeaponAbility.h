@@ -6,6 +6,8 @@
 #include "TtGameplayAbility.h"
 #include "TtEquipWeaponAbility.generated.h"
 
+class UTtWeaponData;
+
 UCLASS()
 class TESTTASK_API UTtEquipWeaponAbility : public UTtGameplayAbility
 {
@@ -29,5 +31,6 @@ protected:
 
 private:
 	TWeakObjectPtr<UTtWeaponComponent> PendingWeaponComponent;
+	TWeakObjectPtr<UTtWeaponData> PendingWeaponData;
 	ETtWeaponSlot PendingWeaponSlot = ETtWeaponSlot::Slot1;
 };

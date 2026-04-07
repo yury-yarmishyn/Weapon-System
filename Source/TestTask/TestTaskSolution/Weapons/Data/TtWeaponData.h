@@ -13,6 +13,7 @@ class ATtProjectile;
 class UAnimInstance;
 class UAnimMontage;
 class UGameplayAbility;
+class UGameplayEffect;
 class USkeletalMesh;
 class UTtProjectileData;
 
@@ -40,6 +41,15 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Ammo")
 	int32 MagazineSize = 30;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Combat", meta=(ClampMin="0.0"))
+	float BasicDamage = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Combat")
+	FGameplayTag BasicDamageDataTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Combat")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon|Abilities")
 	TSubclassOf<UGameplayAbility> FireAbilityClass;

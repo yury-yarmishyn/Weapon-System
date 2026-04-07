@@ -3,31 +3,40 @@
 #include "TestTaskSolution/Combat/Execution/TtFireDamageCalculation.h"
 
 #include "GameplayEffectExtension.h"
-#include "GameplayTagContainer.h"
-#include "Core/TtGameplayTags.h"
 #include "TestTaskSolution/Combat/Attributes/TtAttributeSet.h"
-
-namespace TtFireMMCHelpers
-{
-	static float GetSetByCallerOrLevel(const FGameplayEffectSpec& Spec, const FGameplayTag DataTag, const float Fallback)
-	{
-		if (!DataTag.IsValid())
-		{
-			return Fallback;
-		}
-
-		return Spec.GetSetByCallerMagnitude(DataTag, false, Fallback);
-	}
-}
 
 UTtFireDamageCalculation::UTtFireDamageCalculation()
 {
+	DamageDef = FGameplayEffectAttributeCaptureDefinition(
+		UTtAttributeSet::GetDamageAttribute(),
+		EGameplayEffectAttributeCaptureSource::Source,
+		false);
+
+	MaxHealthDef = FGameplayEffectAttributeCaptureDefinition(
+		UTtAttributeSet::GetMaxHealthAttribute(),
+		EGameplayEffectAttributeCaptureSource::Target,
+		false);
+
+	PhysicalResistanceDef = FGameplayEffectAttributeCaptureDefinition(
+		UTtAttributeSet::GetPhysicalResistanceAttribute(),
+		EGameplayEffectAttributeCaptureSource::Target,
+		false);
+
 	FireResistanceDef = FGameplayEffectAttributeCaptureDefinition(
 		UTtAttributeSet::GetFireResistanceAttribute(),
 		EGameplayEffectAttributeCaptureSource::Target,
 		false);
 
+	WaterResistanceDef = FGameplayEffectAttributeCaptureDefinition(
+		UTtAttributeSet::GetWaterResistanceAttribute(),
+		EGameplayEffectAttributeCaptureSource::Target,
+		false);
+
+	RelevantAttributesToCapture.Add(DamageDef);
+	RelevantAttributesToCapture.Add(MaxHealthDef);
+	RelevantAttributesToCapture.Add(PhysicalResistanceDef);
 	RelevantAttributesToCapture.Add(FireResistanceDef);
+	RelevantAttributesToCapture.Add(WaterResistanceDef);
 }
 
 float UTtFireDamageCalculation::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
@@ -36,13 +45,30 @@ float UTtFireDamageCalculation::CalculateBaseMagnitude_Implementation(const FGam
 	EvaluationParameters.SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	EvaluationParameters.TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
 
+	float PhysicalResistance = 0.f;
+	GetCapturedAttributeMagnitude(PhysicalResistanceDef, Spec, EvaluationParameters, PhysicalResistance);
+
 	float FireResistance = 0.f;
 	GetCapturedAttributeMagnitude(FireResistanceDef, Spec, EvaluationParameters, FireResistance);
-	FireResistance = FMath::Clamp(FireResistance, 0.f, 100.f);
 
-	const float RawDamage = TtFireMMCHelpers::GetSetByCallerOrLevel(
-		Spec,
-		TtGameplayTags::TAG_Data_Damage_Fire,
-		Spec.GetLevel());
-	return FMath::Max(0.f, RawDamage * (1.f - (FireResistance / 100.f)));
+	float WaterResistance = 0.f;
+	GetCapturedAttributeMagnitude(WaterResistanceDef, Spec, EvaluationParameters, WaterResistance);
+
+	float BaseDamageMultiplier = 0.f;
+	GetCapturedAttributeMagnitude(DamageDef, Spec, EvaluationParameters, BaseDamageMultiplier);
+
+	float MaxHealth = 0.f;
+	GetCapturedAttributeMagnitude(MaxHealthDef, Spec, EvaluationParameters, MaxHealth);
+
+	const float WeightedResistance =
+		FMath::Max(0.f, PhysicalResistance) * 0.5f +
+		FMath::Max(0.f, FireResistance) * 1.0f +
+		FMath::Max(0.f, WaterResistance) * 0.25f;
+
+	const float SafeMaxHealth = FMath::Max(MaxHealth, KINDA_SMALL_NUMBER);
+	const float DamageMultiplier = SafeMaxHealth / (SafeMaxHealth + WeightedResistance);
+	const float DamageRaw = FMath::Max(0.f, BaseDamageMultiplier);
+	const float FinalDamage = DamageRaw * DamageMultiplier;
+
+	return DamageRaw > 0.f ? (FinalDamage / DamageRaw) : 0.f;
 }

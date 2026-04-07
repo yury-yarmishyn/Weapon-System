@@ -7,7 +7,7 @@
 #include "TtWaterDamageCalculation.generated.h"
 
 /**
- * Example MMC: converts incoming water damage into final value using target WaterResistance.
+ * Resolves water damage from SetByCaller and applies weighted resistances.
  */
 UCLASS()
 class TESTTASK_API UTtWaterDamageCalculation : public UGameplayModMagnitudeCalculation
@@ -21,5 +21,9 @@ protected:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 
 private:
+	FGameplayEffectAttributeCaptureDefinition DamageDef;
+	FGameplayEffectAttributeCaptureDefinition MaxHealthDef;
+	FGameplayEffectAttributeCaptureDefinition PhysicalResistanceDef;
+	FGameplayEffectAttributeCaptureDefinition FireResistanceDef;
 	FGameplayEffectAttributeCaptureDefinition WaterResistanceDef;
 };

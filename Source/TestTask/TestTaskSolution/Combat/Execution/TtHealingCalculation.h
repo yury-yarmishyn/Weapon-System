@@ -7,7 +7,7 @@
 #include "TtHealingCalculation.generated.h"
 
 /**
- * Example MMC: computes healing amount and clamps it to missing health.
+ * Healing magnitude is resolved from source Damage attribute.
  */
 UCLASS()
 class TESTTASK_API UTtHealingCalculation : public UGameplayModMagnitudeCalculation
@@ -21,6 +21,5 @@ protected:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 
 private:
-	FGameplayEffectAttributeCaptureDefinition HealthDef;
-	FGameplayEffectAttributeCaptureDefinition MaxHealthDef;
+	FGameplayEffectAttributeCaptureDefinition DamageDef;
 };

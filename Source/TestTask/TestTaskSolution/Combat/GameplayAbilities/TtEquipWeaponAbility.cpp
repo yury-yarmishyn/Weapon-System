@@ -2,6 +2,8 @@
 
 #include "TestTaskSolution/Combat/GameplayAbilities/TtEquipWeaponAbility.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "Core/TtGameplayTags.h"
 #include "TestTask.h"
 #include "TestTaskSolution/Weapons/Components/TtWeaponComponent.h"
@@ -38,16 +40,30 @@ void UTtEquipWeaponAbility::ActivateAbility(
 	}
 
 	ETtWeaponSlot NewWeaponSlot = WeaponComponent->GetCurrentWeaponSlot();
+	const UTtWeaponData* RequestedWeaponData = nullptr;
 	if (TriggerEventData)
 	{
-		const UTtWeaponData* WeaponData = Cast<UTtWeaponData>(TriggerEventData->OptionalObject);
+		const UTtWeaponData* WeaponData = Cast<const UTtWeaponData>(TriggerEventData->OptionalObject);
 		if (WeaponData)
 		{
+			RequestedWeaponData = WeaponData;
 			NewWeaponSlot = FindWeaponSlotByData(WeaponComponent, WeaponData, NewWeaponSlot);
 		}
 	}
 
+	if (!RequestedWeaponData)
+	{
+		UE_LOG(
+			LogTestTask,
+			Warning,
+			TEXT("[%s] EquipWeaponAbility rejected: missing weapon data in OptionalObject"),
+			*GetNameSafe(WeaponComponent->GetOwner()));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
 	PendingWeaponComponent = WeaponComponent;
+	PendingWeaponData = const_cast<UTtWeaponData*>(RequestedWeaponData);
 	PendingWeaponSlot = NewWeaponSlot;
 
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
@@ -82,10 +98,35 @@ bool UTtEquipWeaponAbility::CommitAbility(
 		WeaponComponent->SetCurrentAmmoSlot(*SavedAmmoSlot);
 	}
 
-	const UTtWeaponData* EquippedWeaponData = nullptr;
-	if (const UTtWeaponData* const* WeaponDataPtr = WeaponComponent->GetWeaponSlotByWeaponData().Find(PendingWeaponSlot))
+	const UTtWeaponData* EquippedWeaponData = PendingWeaponData.Get();
+
+	UAbilitySystemComponent* AbilitySystemComponent = ActorInfo ? ActorInfo->AbilitySystemComponent.Get() : nullptr;
+	if (!AbilitySystemComponent)
 	{
-		EquippedWeaponData = *WeaponDataPtr;
+		AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(WeaponComponent->GetOwner());
+	}
+
+	bool bBasicDamageEffectApplied = false;
+	const float WeaponBasicDamage = EquippedWeaponData ? FMath::Max(0.f, EquippedWeaponData->BasicDamage) : 0.f;
+	if (AbilitySystemComponent && EquippedWeaponData && EquippedWeaponData->DamageEffectClass)
+	{
+		const FGameplayTag BasicDamageDataTag = EquippedWeaponData->BasicDamageDataTag.IsValid()
+			? EquippedWeaponData->BasicDamageDataTag
+			: TtGameplayTags::TAG_Data_Damage;
+
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+			EquippedWeaponData->DamageEffectClass,
+			1.f,
+			EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			SpecHandle.Data->SetSetByCallerMagnitude(BasicDamageDataTag, WeaponBasicDamage);
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			bBasicDamageEffectApplied = true;
+		}
 	}
 
 	if (ActorInfo)
@@ -109,9 +150,11 @@ bool UTtEquipWeaponAbility::CommitAbility(
 	UE_LOG(
 		LogTestTask,
 		Log,
-		TEXT("[%s] Weapon equipped. WeaponSlot=%d"),
+		TEXT("[%s] Weapon equipped. WeaponSlot=%d BasicDamage=%.2f BasicDamageGEApplied=%s"),
 		*GetNameSafe(WeaponComponent->GetOwner()),
-		static_cast<int32>(PendingWeaponSlot));
+		static_cast<int32>(PendingWeaponSlot),
+		WeaponBasicDamage,
+		bBasicDamageEffectApplied ? TEXT("true") : TEXT("false"));
 
 	return true;
 }

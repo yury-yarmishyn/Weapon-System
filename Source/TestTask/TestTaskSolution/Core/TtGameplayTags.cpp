@@ -44,6 +44,10 @@ namespace TtGameplayTags
 		"Actor is burning and receives periodic fire damage.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(
+		TAG_Data_Damage,
+		"Data.Damage",
+		"SetByCaller data tag for unified weapon damage/healing magnitude.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(
 		TAG_Data_Damage_Physical,
 		"Data.Damage.Physical",
 		"SetByCaller data tag for physical damage magnitude.");

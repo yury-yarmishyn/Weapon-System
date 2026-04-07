@@ -18,12 +18,14 @@ ATtProjectile::ATtProjectile()
 	SetRootComponent(CollisionComponent);
 
 	CollisionComponent->SetSphereRadius(8.f);
-	CollisionComponent->SetCollisionProfileName(TEXT("OverlapAll"));
-	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionComponent->SetGenerateOverlapEvents(true);
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
+	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
+	CollisionComponent->SetGenerateOverlapEvents(false);
+	CollisionComponent->SetNotifyRigidBodyCollision(true);
 	CollisionComponent->CanCharacterStepUpOn = ECB_No;
 	CollisionComponent->SetHiddenInGame(false);
-	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ATtProjectile::OnCollisionHit);
+	CollisionComponent->OnComponentHit.AddDynamic(this, &ATtProjectile::OnCollisionHit);
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComponent;
@@ -39,9 +41,15 @@ void ATtProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (AActor* InstigatorActor = GetInstigator())
+	AActor* InitiatorActor = GetInstigator();
+	if (!InitiatorActor)
 	{
-		CollisionComponent->IgnoreActorWhenMoving(InstigatorActor, true);
+		InitiatorActor = GetOwner();
+	}
+
+	if (InitiatorActor)
+	{
+		CollisionComponent->IgnoreActorWhenMoving(InitiatorActor, true);
 	}
 
 	InitProjectile();
@@ -79,20 +87,24 @@ void ATtProjectile::InitProjectile()
 }
 
 void ATtProjectile::OnCollisionHit(
-	UPrimitiveComponent* OverlappedComponent,
+	UPrimitiveComponent* HitComponent,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult)
+	FVector NormalImpulse,
+	const FHitResult& Hit)
 {
-	(void)OverlappedComponent;
+	(void)HitComponent;
 	(void)OtherComp;
-	(void)OtherBodyIndex;
-	(void)bFromSweep;
-	(void)SweepResult;
+	(void)NormalImpulse;
+	(void)Hit;
 
-	if (!OtherActor || OtherActor == this || OtherActor == GetInstigator() || OtherActor == GetOwner())
+	AActor* InitiatorActor = GetInstigator();
+	if (!InitiatorActor)
+	{
+		InitiatorActor = GetOwner();
+	}
+
+	if (!OtherActor || OtherActor == this || OtherActor == InitiatorActor)
 	{
 		return;
 	}

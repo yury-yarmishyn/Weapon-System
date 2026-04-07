@@ -7,7 +7,7 @@
 #include "TtPhysicalDamageCalculation.generated.h"
 
 /**
- * Example MMC: converts incoming physical damage into final value using target PhysicalResistance.
+ * Resolves physical damage from SetByCaller and applies weighted resistances.
  */
 UCLASS()
 class TESTTASK_API UTtPhysicalDamageCalculation : public UGameplayModMagnitudeCalculation
@@ -21,5 +21,9 @@ protected:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 
 private:
+	FGameplayEffectAttributeCaptureDefinition DamageDef;
+	FGameplayEffectAttributeCaptureDefinition MaxHealthDef;
 	FGameplayEffectAttributeCaptureDefinition PhysicalResistanceDef;
+	FGameplayEffectAttributeCaptureDefinition FireResistanceDef;
+	FGameplayEffectAttributeCaptureDefinition WaterResistanceDef;
 };

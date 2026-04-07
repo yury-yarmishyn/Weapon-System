@@ -7,7 +7,7 @@
 #include "TtFireDamageCalculation.generated.h"
 
 /**
- * Example calculation: converts incoming fire damage into final value using target FireResistance.
+ * Resolves fire damage from SetByCaller and applies weighted resistances.
  */
 UCLASS()
 class TESTTASK_API UTtFireDamageCalculation : public UGameplayModMagnitudeCalculation
@@ -21,5 +21,9 @@ protected:
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 
 private:
+	FGameplayEffectAttributeCaptureDefinition DamageDef;
+	FGameplayEffectAttributeCaptureDefinition MaxHealthDef;
+	FGameplayEffectAttributeCaptureDefinition PhysicalResistanceDef;
 	FGameplayEffectAttributeCaptureDefinition FireResistanceDef;
+	FGameplayEffectAttributeCaptureDefinition WaterResistanceDef;
 };
