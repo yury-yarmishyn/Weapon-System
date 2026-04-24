@@ -1,7 +1,7 @@
 # TestTaskSolution
 
-`TestTaskSolution` is the main gameplay module for this test project, located at `Source/TestTask/TestTaskSolution/`.
-The implementation is based on `Gameplay Ability System` with event-driven ability activation, data-driven weapon/ammo setup, and a clear split between visual and gameplay layers.
+`TestTaskSolution` is a test `WeaponSystem` project with weapon and ammo switching, projectile firing, reloading, damage processing, resistances, and status effects.
+The implementation is based on `Gameplay Ability System` with event-driven ability activation and data-driven weapon/ammo setup.
 
 ## Implemented Features
 
