@@ -3,6 +3,10 @@
 `TestTaskSolution` is a test `WeaponSystem` project with weapon and ammo switching, projectile firing, reloading, damage processing, resistances, and status effects.
 The implementation is based on `Gameplay Ability System` with event-driven ability activation and data-driven weapon/ammo setup.
 
+# Showcases
+
+- Node Wrap : https://youtu.be/ojC33S3Y9S4
+
 ## Implemented Features
 
 - Projectile shooting through GAS (`Event -> Ability -> Projectile -> GameplayEffect`).
